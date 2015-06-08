@@ -1,0 +1,16 @@
+$TTL 86400
+@ SOA unix.network. user.host39.unix.network. 2015080613 (
+                                                10h ; slave-server connection preiod
+                                                1h  ; retry
+                                                1w  ; lifetime
+                                                1h ); negative
+@ IN A 192.168.1.5
+@ IN NS ns.unix.network.
+ns IN A 192.168.1.5
+
+
+router.unix.network. A 192.168.1.1
+host5.unix.network. A 192.168.1.5
+host190.unix.network. A 192.168.1.190
+host39.unix.network. A 192.168.1.39
+
