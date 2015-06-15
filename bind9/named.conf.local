@@ -6,9 +6,9 @@
 // organization
 //include "/etc/bind/zones.rfc1918";
 
-zone "unix.network" {
+zone "unix.networks" {
     type master;
-    file "/etc/bind/db.unix.network";
+    file "/etc/bind/db.unix.networks";
 };
  
 zone "1.168.192.in-addr.arpa" {

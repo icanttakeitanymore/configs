@@ -1,13 +1,13 @@
 $TTL 86400 
-1.168.192.in-addr.arpa. IN SOA unix.network. user.host5.unix.network. 2015080613 (
+1.168.192.in-addr.arpa. IN SOA unix.networks. user.host190.unix.networks. 2015080613 (
                                                 10h  ; slave-server connection period
                                                 1h   ; retry
                                                 1w   ; life-time
                                                 1h ) ; negative ttl
 
-                NS host5.unix.network.
+                NS host5.unix.networks.
 
-1 PTR router.unix.network.
-5 PTR host5.unix.network.
-39 PTR host39.unix.network.
-190 PTR host190.unix.network.
+1 PTR router.unix.networks.
+5 PTR host5.unix.networks.
+39 PTR host39.unix.networks.
+190 PTR host190.unix.networks.

@@ -1,4 +1,4 @@
-  acl unix.network { 192.168.1.1; 192.168.1.5; 192.168.1.190; 192.168.1.39; 127.0.0.1; };
+  acl unix.network { 192.168.1.1; 192.168.1.190; 192.168.1.39; 127.0.0.1; };
     options {
         directory "/var/cache/bind";
         auth-nxdomain no;
