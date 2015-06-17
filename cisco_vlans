@@ -146,4 +146,4 @@ Ping statistics for 192.16.4.2:
 Approximate round trip times in milli-seconds:
     Minimum = 16ms, Maximum = 16ms, Average = 16ms
 ###
-всё готовы два vlan для юзеров A и B и один для администрирования свичей admin.
+всё, готовы два vlan для юзеров групп A и B и один для администрирования свичей admin.
