@@ -88,20 +88,18 @@ sw-one(config-if)#ip address 192.16.1.4 255.255.255.0
 # vlan 101 будет на порте fa0/2
 #
 #sw-one
+sw-one(config)#vlan 101
+sw-one(config-vlan)#name A
 sw-one(config)#interface FastEthernet0/2
-sw-one(config-if)#description A
 sw-one(config-if)#switchport access vlan 101
 sw-one(config-if)#switchport mode access
 #sw-two
 sw-two#conf t
-Enter configuration commands, one per line.  End with CNTL/Z.
 sw-two(config)#interface FastEthernet0/2
 sw-two(config-if)#switchport access vlan 101
-% Access VLAN does not exist. Creating vlan 101
 sw-two(config-if)#switchport mode access
 #заходим на sw-trunk, добавляем vlan 101
 sw-trunk#conf t
-Enter configuration commands, one per line.  End with CNTL/Z.
 sw-trunk(config)#vlan 101
 sw-trunk(config-vlan)#name A
 #
