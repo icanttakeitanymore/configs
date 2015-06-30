@@ -22,7 +22,7 @@ B-2 - |            |
 sw-trunk(config)#interface GigabitEthernet1/2
 sw-trunk(config-if)#switchport trunk allowed vlan 2,101,102
 sw-trunk(config-if)#switchport mode trunk
-теперь gw-one порты роутера не могут быть транковыми, всё что нужно сделать это добавить vlan 2,101,102 и создать саб интерфейсы и назначить им инкапсуляцию vlan и ip
+теперь gw-one : порты роутера не могут быть транковыми, всё что нужно сделать это добавить vlan 2,101,102 и создать саб интерфейсы и назначить им инкапсуляцию vlan и ip
 gw-one(config)vlan 2 name admin
 gw-one(config)vlan 101 name A
 gw-one(config)vlan 102 name B
