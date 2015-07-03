@@ -1,0 +1,147 @@
+# настройка vlan
+# нужно 3 vlan
+# vlan  101(A) : 192.16.3.0/24
+# vlan  102(B) : 192.16.4.0/24
+# vlan  2(admin) : 192.16.1.0/24
+# в vlan A два PC: 192.16.3.2(A-2) и 192.16.3.3(A-3) fa0/2
+# в vlan B два PC: 192.16.4.2(B-2) и 192.16.4.3(B-3) fa0/3
+# vlan admin для администрации в нем есть : sw-trunk  192.16.1.2, sw-one 192.16.1.3, sw-two 192.16.1.4
+# fa0/1 на свичах под trunk(на sw-trunk гигабитные)
+
+карта
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+A-2 - |
+      --sw-one ---sw-trunk
+B-2 - |            |
+                   |
+               sw-two
+                |   |
+               A-3 B-3
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+
+# настраиваем sw-trunk
+#присваеваем hostname
+Switch>en
+Switch#conf t
+Switch(config)#hostname sw-trunk
+#свичи подключены к GigabitEthernet1/1; GigabitEthernet1/2, включаем на них транк и добавляем vlan`ы
+sw-trunk(config)#interface GigabitEthernet1/1
+sw-trunk(config-if)#switchport trunk allowed vlan 2,101,102
+sw-trunk(config-if)#switchport mode trunk
+
+sw-trunk(config)#interface GigabitEthernet1/1
+sw-trunk(config-if)#switchport trunk allowed vlan 2,101,102
+sw-trunk(config-if)#switchport mode trunk
+
+# а так же даем айпишник vlan 2
+sw-trunk(config)#vlan 2
+sw-trunk(config-vlan)#name admin
+sw-trunk(config)#interface vlan 2
+sw-trunk(config-if)#description admin
+sw-trunk(config-if)#ip add
+sw-trunk(config-if)#ip address 192.16.1.2 255.255.255.0
+
+# настраиваем sw-one
+
+Switch(config)#hostname sw-one
+
+sw-one(config)#interface fastEthernet0/1
+sw-one(config-if)#switchport trunk allowed vlan 2,101,102
+sw-one(config-if)#switchport mode trunk
+# даём ip vlan 2
+sw-trunk(config)#vlan 2
+sw-trunk(config-vlan)#name admin
+sw-one(config)#interface vlan 2
+sw-one(config-if)#ip address 192.16.1.3 255.255.255.0
+#теперь с одного свича можно пингануть другой
+sw-trunk#ping 192.16.1.3
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.16.1.3, timeout is 2 seconds:
+..!!!
+Success rate is 60 percent (3/5), round-trip min/avg/max = 0/0/0 ms
+
+
+# sw-two
+Switch>enable
+Switch#configure terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#hostname sw-two
+sw-two(config)#
+sw-one(config)#interface fastEthernet0/1
+sw-one(config-if)#switchport trunk allowed vlan 2,101,102
+sw-one(config-if)#switchport mode trunk
+# даём ip vlan 2
+sw-trunk(config)#vlan 2
+sw-trunk(config-vlan)#name admin
+sw-one(config)#interface vlan 2
+sw-one(config-if)#ip address 192.16.1.4 255.255.255.0
+#
+#vlan 2 ok
+
+
+### теперь мы настраиваем аццес порты(когда пакет уходит с аццес порта идет декапсуляция в обычный фрейм, без vlan)
+# vlan 101 будет на порте fa0/2
+#
+#sw-one
+sw-one(config)#vlan 101
+sw-one(config-vlan)#name A
+sw-one(config)#interface FastEthernet0/2
+sw-one(config-if)#switchport access vlan 101
+sw-one(config-if)#switchport mode access
+#sw-two
+sw-two#conf t
+sw-two(config)#interface FastEthernet0/2
+sw-two(config-if)#switchport access vlan 101
+sw-two(config-if)#switchport mode access
+#заходим на sw-trunk, добавляем vlan 101
+sw-trunk#conf t
+sw-trunk(config)#vlan 101
+sw-trunk(config-vlan)#name A
+#
+#теперь с A-3 можно пингануть A-2
+#
+
+PC>ping 192.16.3.2
+
+Pinging 192.16.3.2 with 32 bytes of data:
+
+Reply from 192.16.3.2: bytes=32 time=47ms TTL=128
+Reply from 192.16.3.2: bytes=32 time=14ms TTL=128
+Reply from 192.16.3.2: bytes=32 time=15ms TTL=128
+Reply from 192.16.3.2: bytes=32 time=10ms TTL=12
+
+# повторяем настройку для vlan 102
+# не выходя с sw-trunk, добавляем вилан 102
+sw-trunk(config)#vlan 102
+sw-trunk(config-vlan)#name B
+##настраиваем sw-one
+sw-one(config)#interface fa0/3
+sw-one(config-if)#switchport access vlan 102
+sw-one(config-if)#switchport mode access 
+sw-one(config)#vlan 102
+sw-one(config-vlan)#name B
+##настраиваем sw-two
+sw-two#configure terminal 
+sw-two(config)#vlan 102
+sw-two(config-vlan)#name B
+sw-two(config)#interface fastEthernet 0/3
+sw-two(config-if)#switchport access vlan 102
+sw-two(config-if)#switchport mode access 
+#пингуем с B-3  B-2
+PC>ping 192.16.4.2
+
+Pinging 192.16.4.2 with 32 bytes of data:
+
+Reply from 192.16.4.2: bytes=32 time=16ms TTL=128
+
+Ping statistics for 192.16.4.2:
+    Packets: Sent = 1, Received = 1, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 16ms, Maximum = 16ms, Average = 16ms
+###
+всё, готовы два vlan для юзеров групп A и B и один для администрирования свичей admin.

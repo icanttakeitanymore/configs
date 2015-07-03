@@ -1,0 +1,43 @@
+#прописываем в /etc/sysctl.conf
+net.ipv4.ip_forward = 1
+
+
+#выполняем 
+sysctl -p 
+#чтобы форвардинг включился, с одним интерфейсов в принципе форвардинг работает сразу.
+#nat
+
+iptables -A POSTROUTING -t nat -j MASQUERADE
+#так как интерфейса два включаем на них nat
+
+iptables --append FORWARD --in-interface eth1 -j ACCEPT
+iptables --append FORWARD --in-interface eth2 -j ACCEPT
+iptables -P FORWARD DROP
+
+нат работает.
+
+
+Фильтры
+Дропнуть весь входящий трафик
+# iptables -P INPUT DROP
+
+Разрешить tcp для одного ip
+-A INPUT -s 192.168.1.1/32 -p tcp -j ACCEPT
+Сбросить входящий трафик по tcp в подсети.
+# iptables -A INPUT -s 192.168.0.0/24 -p tcp -j DROP
+
+Запрет ICMP type 8 - пинг.
+Разрешаем для одного IP
+# iptables -A INPUT -s 192.168.1.5/32 -p icmp -m icmp --icmp-type 8 -j ACCEPT
+Дропаем все остальные пинги
+#-A INPUT -p icmp -m icmp --icmp-type 8 -j DROP
+Дроп пинга на интерфейсе
+#-A INPUT -i eth0 -p icmp -m icmp --icmp-type 8 -j DROP
+
+debian  iptables-persistent    
+в центосе конфиг лежит в /etc/sysconfig/iptablesi 
+сохранить конфиг /etc/init.d/iptables save
+сохранить конфиг в файл iptables-save > /путь/к/файлу
+рестарт iptables /etc/init.d/iptables restart
+
+не забыть DNS в /etc/resolv.conf
