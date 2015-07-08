@@ -1,4 +1,4 @@
-Алиасы:
+#!Алиасы:
 
 
 1). Группы хостов:
@@ -15,7 +15,7 @@ admins_backup:x:2003:backup1,backup2
 Cmnd_Alias      ADMINS_RANK1 = /usr/bin/$name, /bin/$name
 Cmnd_Alias      ADMINS_RANK2 = /etc/init.d/$name, /etc/init.d/$name
 Cmnd_Alias      ADMINS_BACKUP = /sbin/dump, /sbin/resrote
-
+!# Примеры:
 4). Пусть у нас будет администратор, который будет иметь доступ ко всем серверам с логином 1stadmin
 , он будет иметь доступ ко всему и вся.
 
