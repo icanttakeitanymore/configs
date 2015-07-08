@@ -38,7 +38,8 @@ admins_init:x:200X:admin1,admin2,admin3
 
 8). Пусть у нас будет юзер priorityadmin который может использовать бекап как юзер backupadmin и будет администратором USERS_STATIONS.
 priorityadmin SERVERS = (backupuser) ADMINS_BACKUP : USERS_STATIONS = ALL
-
+для выполнения комманд ему придётся делать следущее :
+$sudo -u backupadmin /sbin/dump
 9). Так же можно определить юзера nictester, которому будет доступна комманда tcpdump на всех компьютерах.
 nictester ALL = /usr/sbin/tcpdump
 
