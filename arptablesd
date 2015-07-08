@@ -1,0 +1,2 @@
+#!/bin/sh
+/sbin/arptables-restore /etc/arptables.conf
