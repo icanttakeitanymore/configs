@@ -1,0 +1,44 @@
+Алиасы:
+
+
+1). Группы хостов:
+
+# Host alias specification
+Host_Alias      SERVERS = server1, server2, server3
+Host_Alias	USERS_STATIONS = host1,host2,host3
+2). Группы пользователей:
+Определить в /etc/group например -
+admins_servers:x:2001:admin1,admin2,admin3
+admins_users_sations:x:2002:admin4,admin5,admin6
+admins_backup:x:2003:backup1,backup2
+3). Группы комманд
+Cmnd_Alias      ADMINS_RANK1 = /usr/bin/$name, /bin/$name
+Cmnd_Alias      ADMINS_RANK2 = /etc/init.d/$name, /etc/init.d/$name
+Cmnd_Alias      ADMINS_BACKUP = /sbin/dump, /sbin/resrote
+
+4). Пусть у нас будет администратор, который будет иметь доступ ко всем серверам с логином 1stadmin
+, он будет иметь доступ ко всему и вся.
+
+# User privilege specification
+1stadmin SERVERS = ALL
+5). Пусть у нас будет администратор, который будет иметь доступ ко всем серверам с логином backupadmin
+, он будет иметь доступ к бекапу на серверах.
+# User privilege specification
+backupadmin SERVERS = ADMINS_BACKUP
+6). Пусть у нас будет администратор, который будет иметь доступ ко всем компьютерам пользователей с логином useradmin
+, с доступом ко всему и вся.
+# User privilege specification
+useradmin USERS_STATION = ALL
+7). Пусть у нас будут два администратора, которые будут иметь доступ везде к управлению инит скриптами.
+
+Определить в /etc/group
+admins_init:x:200X:admin1,admin2,admin3
+# Allow members of group sudo to execute any command
+%admins_init ALL = ADMINS_RANK2
+
+8). Пусть у нас будет юзер priorityadmin который может использовать бекап как юзер backupadmin и будет администратором USERS_STATIONS.
+priorityadmin SERVERS = (backupuser) ADMINS_BACKUP : USERS_STATIONS = ALL
+
+9). Так же можно определить юзера nictester, которому будет доступна комманда tcpdump на всех компьютерах.
+nictester ALL = /usr/sbin/tcpdump
+

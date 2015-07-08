@@ -1,0 +1,9 @@
+ Сначала их нужно инициализировать командами
+	sudo pvcreate /dev/sdX
+	sudo pvcreate /dev/sdX
+ Создаем группу
+	sudo vgcreate vg /dev/sdX /dev/sdX
+        Volume group "vg" successfully created
+ Создаем раздел
+        sudo lvcreate -l $size vg -n $name
+	Logical volume "massiv" created
