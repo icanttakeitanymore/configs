@@ -1,9 +1,22 @@
 #!/bin/bash
+#Дата.
 date=$(date "+%d_%m_%Y")
-echo Это простая оболочка для dbf2sql, она нужна для заливки dbf файлов в бд mysql.
+#Ввод файла.
+echo "Это простая оболочка для dbf2mysql, она нужна для заливки dbf файлов в бд mysql."
+ 
+echo "Если пакет установлен - выполните sudo apt-get install dbf2sql"
+I=`dpkg -s dbf2mysql | grep "Status" ` #проверяем состояние пакета (dpkg) и ищем в выводе его статус (grep)
+if [ -n "$I" ] #проверяем что нашли строку со статусом (что строка не пуста)
+then
+   echo " dbf2mysql installed" #выводим результат
+else
+   echo "dbf2mysql not installed"
+fi
 echo "Введите полный адрес к dbf файлу: "
 read file
+#Замена запятых на точки.
 sed -e 's/,/./g' $file > $file$date
+#Данные для логина в бд.
 echo  В ваш dbf файл был скопирован, его имя было изменено, рядом с ним лежит его копия в $file$date. 
 echo "Введите хост mysql(localhost): "
 read host
@@ -16,7 +29,9 @@ echo "Введите имя бд в которую будут заливатьс
 read mysqlbase
 echo "Там будут созданы таблицы для ваших файлов с именем dbfИМЯ_$date, ВНИМАНИЕ! если такая таблица уже есть, она будет удалена, введите ИМЯ: "
 read mysqltable
+#Заливка в бд.
 dbf2mysql -h $host -d $mysqlbase -t dbf_$mysqltable$date -c -U $user -P $password $file$date -vvv
+#Информация о таблицах в базе.
 mysql -u $user -p$password << EOF
 use $mysqlbase;
 show tables;
