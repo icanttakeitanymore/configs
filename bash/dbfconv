@@ -1,0 +1,23 @@
+#!/bin/bash
+date=$(date "+%d_%m_%Y")
+echo Это простая оболочка для dbf2sql, она нужна для заливки dbf файлов в бд mysql.
+echo "Введите полный адрес к dbf файлу: "
+read file
+sed -e 's/,/./g' $file > $file$date
+echo  В ваш dbf файл был скопирован, его имя было изменено, рядом с ним лежит его копия в $file$date. 
+echo "Введите хост mysql(localhost): "
+read host
+echo "Введите логин mysql: "
+read user
+echo "Введите пароль от mysql: "
+read -ers password
+echo "В вашей базе данных должна быть таблица для хранения ваших данных из dbf файлов."
+echo "Введите имя бд в которую будут заливаться файлы: "
+read mysqlbase
+echo "Там будут созданы таблицы для ваших файлов с именем dbfИМЯ_$date, ВНИМАНИЕ! если такая таблица уже есть, она будет удалена, введите ИМЯ: "
+read mysqltable
+dbf2mysql -h $host -d $mysqlbase -t dbf_$mysqltable$date -c -U $user -P $password $file$date -vvv
+mysql -u $user -p$password << EOF
+use $mysqlbase;
+show tables;
+EOF
