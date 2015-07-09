@@ -4,7 +4,7 @@ date=$(date "+%d_%m_%Y")
 #Ввод файла.
 echo "Это простая оболочка для dbf2mysql, она нужна для заливки dbf файлов в бд mysql."
 #Проверка пакета.
-echo "Если пакет установлен - выполните sudo apt-get install dbf2sql"
+echo "Если пакет не установлен - выполните sudo apt-get install dbf2sql"
 I=`dpkg -s dbf2mysql | grep "Status" `
 if [ -n "$I" ]
 then
