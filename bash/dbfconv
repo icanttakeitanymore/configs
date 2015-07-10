@@ -52,7 +52,8 @@ SHOW COLUMNS FROM $comm_table;
 EOF
       echo "По какой из колонок будем прекреплять: ?"
       read inner_column
-      echo "С какой колонкой будем соединять: ?"
+      echo "Возвращаемся к таблице сделанной программой dbf2mysql."
+      echo "Вывод колонок таблицы dbf_$mysqltable$date;."
 mysql -u $user -p$password << EOF
 use $mysqlbase;
 SHOW COLUMNS FROM dbf_$mysqltable$date;
