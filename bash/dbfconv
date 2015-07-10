@@ -9,7 +9,7 @@ if [ -n "$I" ]
 then
    echo "dbf2mysql установлен" 
 else
-   sudo apt-get install dbf2sql
+   sudo apt-get install dbf2mysql
 fi
    echo "Введите полный адрес к dbf файлу: "
 read file
