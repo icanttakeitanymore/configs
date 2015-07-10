@@ -50,7 +50,7 @@ mysql -u $user -p$password << EOF
 use $mysqlbase;
 SHOW COLUMNS FROM $comm_table;
 EOF
-      echo "По какую из колонок будем прекреплять: ?"
+      echo "По какой из колонок будем прекреплять: ?"
       read inner_column
       echo "С какой колонкой будем соединять: ?"
 mysql -u $user -p$password << EOF
