@@ -2,7 +2,7 @@
 #Дата.
 date=$(date "+%d_%m_%Y")
 #Ввод файла.
-echo "Это простая оболочка для dbf2mysql, она нужна для заливки dbf файлов в бд mysql."
+   echo "Это простая оболочка для dbf2mysql, она нужна для заливки dbf файлов в бд mysql."
 #Проверка пакета.
 I=`dpkg -s dbf2mysql | grep "Status" `
 if [ -n "$I" ]
@@ -11,22 +11,22 @@ then
 else
    sudo apt-get install dbf2sql
 fi
-echo "Введите полный адрес к dbf файлу: "
+   echo "Введите полный адрес к dbf файлу: "
 read file
 #Замена запятых на точки.
-sed -e 's/,/./g' $file > $file$date
+   sed -e 's/,/./g' $file > $file$date
 #Данные для логина в бд.
-echo В ваш dbf файл был скопирован, его имя было изменено, его копия находится в $file$date, она будет испольоваься далее. 
-echo "Введите хост mysql(localhost): "
+   echo В ваш dbf файл был скопирован, его имя было изменено, его копия находится в $file$date, она будет испольоваься далее. 
+   echo "Введите хост mysql(localhost): "
 read host
-echo "Введите логин mysql: "
+   echo "Введите логин mysql: "
 read user
-echo "Введите пароль от mysql: "
+   echo "Введите пароль от mysql: "
 read -ers password
-echo "В вашей базе данных должна быть таблица для хранения ваших данных из dbf файлов."
-echo "Введите имя бд в которую будут заливаться файлы: "
+   echo "В вашей базе данных должна быть таблица для хранения ваших данных из dbf файлов."
+   echo "Введите имя бд в которую будут заливаться файлы: "
 read mysqlbase
-echo "Там будут созданы таблицы для ваших файлов с именем dbf_ИМЯ_$date, ВНИМАНИЕ! если такая таблица уже есть, она будет удалена, введите ИМЯ: "
+   echo "Там будут созданы таблицы для ваших файлов с именем dbf_ИМЯ_$date, ВНИМАНИЕ! если такая таблица уже есть, она будет удалена, введите ИМЯ: "
 read mysqltable
 #Заливка в бд.
 dbf2mysql -h $host -d $mysqlbase -t dbf_$mysqltable$date -c -U $user -P $password $file$date -vvv
@@ -37,7 +37,7 @@ show tables;
 EOF
 
 
-echo "Нужно ли сделать сравнение для соцзащиты? (y/n): ";
+   echo "Нужно ли сделать сравнение для соцзащиты? (y/n): ";
    read yesno;                        
    if [ $yesno = "y" -o $yesno = "Y" ]; then
 mysql -u $user -p$password << EOF
@@ -57,18 +57,13 @@ mysql -u $user -p$password << EOF
 use $mysqlbase;
 SHOW COLUMNS FROM dbf_$mysqltable$date;
 EOF
-       echo "К какой колонке будем прекреплять: ?"
-       read comm_column
-echo Соединяем
-rm output_commpare$date;
+      echo "К какой колонке будем прекреплять: ?"
+      read comm_column
+      echo Соединяем
+      rm output_commpare$date;
 mysql -u $user -p$password $mysqlbase --execute "SELECT * FROM dbf_$mysqltable$date INNER JOIN $comm_table ON $comm_table.$inner_column = dbf_$mysqltable$date.$comm_column;" > output_commpare$date     
 
- #for row in $(echo "SELECT * FROM dbf_$mysqltable$date INNER JOIN $comm_table ON $comm_table.$inner_column = dbf_$mysqltable$date.$comm_column;" | mysql -u $user -p$password $mysqlbase); do
-      #echo $row  >> output_commpare$date
-      # done
       echo Работа закончена, результат находится в output_commpare$date, это обычный текстовый файл.
    else
       echo Работа закончена.
    fi
-
-
