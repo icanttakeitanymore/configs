@@ -1,0 +1,18 @@
+#iceweasel papperflash
+https://github.com/i-rinat/freshplayerplugin
+cp ./libfreshwrapper-pepperflash.so ~/.mozilla/plugins/
+cp ../data/freshwrapper.conf.example ~/.config/freshwrapper.conf
+
+#mesa
+$ git clone git://anongit.freedesktop.org/mesa/mesa mesa.git
+$ cd mesa.git
+$ autoreconf -vfi
+
+
+export LD_LIBRARY_PATH=~/gits/mesa.git/lib
+export EGL_DRIVERS_PATH=~/gits/mesa.git/lib/egl
+export LIBGL_DRIVERS_PATH=~/gits/mesa.git/lib
+
+
+/configure --prefix=/usr --enable-driglx-direct --enable-gles1 --enable-gles2  --enable-glx-tls  --with-dri-driverdir=/usr/lib/dri --with-egl-platforms='drm x11' --with-dri-drivers=i965 --with-gallium-drivers=""
+
