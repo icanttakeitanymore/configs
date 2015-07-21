@@ -1,17 +1,33 @@
-default vesamenu.c32
-    prompt 0
-    menu title PXE Boot Menu
-    MENU AUTOBOOT Starting Local System in # seconds
+path debian-installer/amd64/boot-screens/
+default debian-installer/amd64/boot-screens/vesamenu.c32
+
+
+    PROMT 0
+     MENU TITLE PXE Special Boot Menu
+     MENU INCLUDE pxelinux.cfg/graphics.conf
+     MENU AUTOBOOT Starting Local System in # seconds
     
 
-    label Boot from local drive
-      menu label ^Boot from local drive
-      menu default
+    LABEL Boot from local drive
+      MENU LABEL ^Boot from local drive
+      MENU default
       localboot 0
       timeout 150
       TOTALTIMEOUT 9000
-
+    
+   
     LABEL Installation
-      MENU LABEL ^Installation
-      KERNEL vesamenu.c32
-      APPEND pxelinux.cfg/testing.menu
+      MENU PASSWD password
+      KERNEL debian-installer/amd64/linux
+      APPEND initrd=debian-installer/amd64/initrd.gz auto=true priority=critical locale=ru_RU console-keymaps-at/keymap=ru url=tftp://ldap1/preseed.cfg           
+               
+           
+
+     LABEL Rescue Mode
+     MENU LABEL ^Rescue Mode
+        MENU PASSWD password
+        KERNEL debian-installer/amd64/linux
+        APPEND initrd=debian-installer/amd64/initrd.gz locale=ru_RU console-keymaps-at/keymap=ru rescue/enable=true --- quiet 
+
+
+	

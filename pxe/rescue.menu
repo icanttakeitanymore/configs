@@ -1,0 +1,5 @@
+MENU TITLE Rescue Mode
+label rescue
+        kernel debian-installer/amd64/linux
+	append vga=788 initrd=debian-installer/amd64/initrd.gz rescue/enable=true --- quiet 
+
