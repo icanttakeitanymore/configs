@@ -167,3 +167,6 @@ SSL-Session:
     Timeout   : 7200 (sec)
     Verify return code: 19 (self signed certificate in certificate chain)
 ---
+
+
+ca-cert.crt юзаем на клиентской машине.
