@@ -131,17 +131,8 @@ DzANBgNVBAgMBk1vc2tvdzEQMA4GA1UEBwwHU3R1cGlubzEWMBQGA1UECgwNdW5p
 eC5uZXR3b3JrczEcMBoGA1UECwwTbGRhcDEudW5peC5uZXR3b3JrczEcMBoGA1UE
 AwwTbGRhcDEudW5peC5uZXR3b3JrczEdMBsGCSqGSIb3DQEJARYOcm9vdEBsb2Nh
 bGhvc3QwHhcNMTUwNzIyMTY1NTExWhcNMTYwNzIxMTY1NTExWjBhMQswCQYDVQQG
-EwJSVTEWMBQGA1UEChMNdW5peC5uZXR3b3JrczEcMBoGA1UECxMTbGRhcDEudW5p
-eC5uZXR3b3JrczEcMBoGA1UEAxMTbGRhcDEudW5peC5uZXR3b3JrczCCASIwDQYJ
-KoZIhvcNAQEBBQADggEPADCCAQoCggEBAL4gHr0jlrsMJuGRCqGhFb92sqgi9vNt
-NFESF7AF1IwWrSYksXatriY6bbxdID5nwYxbLjPPh4ihn9F/DmOWEDaXm11rpZnQ
-K2JvTVQ7SQVQR1A4q1ee1EGSGBtiba3/1KHlXZ5ZWJM87f86DE5X+o4e52dPpUhp
-14DXL7eQnZxjCajvmjpbuTiFdju2TWqMwOk8kqWMsLF8xda62p6te/fJBJs7O7Th
-OmNlHE5ax/NZBN0vpDsnmck9FZnO+7XCpZCQ/jJYJLAoMQB25ik9alseSBnpqgUO
-7RbFqcmhKAGDsH9HuQvrzWGONpScrcbbPrLSwRScaZ+a30p67Z+Kg68CAwEAAaN7
-MHkwCQYDVR0TBAIwADAsBglghkgBhvhCAQ0EHxYdT3BlblNTTCBHZW5lcmF0ZWQg
-Q2VydGlmaWNhdGUwHQYDVR0OBBYEFIidFcsDV+fMQTw8bMiMPmDiLkc/MB8GA1Ud
-IwQYMBaAFACYA14dzi5+VqBnNrvPhpzP+glAMA0GCSqGSIb3DQEBCwUAA4IBAQDW
+################################################################
+################################################################
 ZgRADQGOdcoQhKmsGyiCGf2GpPKcXc4NnNIMxHLJQ5o+OcAvTxnzSOMtSytFcfKv
 JL+0AUU6ozUhrX6gKocvsK+zC9hH9XnLgJsUM3be2l0iRM1h5VtAkmw3bFqSGNJ+
 DxvH5F0YQC8WGlFIzVZdSXgnx5gqKzp2f7sC/lVZSAd4UG3jsC6zEPcizEIaF72A
@@ -150,7 +141,7 @@ h15dslAOyo0RhRu/P0KvvFWXjVWgUcITHoGty3ShK41Ax6Iv5RrrULu5dvKrWGUq
 KV7uKNYs7lvBq2aiKQOM
 -----END CERTIFICATE-----
 subject=/C=RU/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks
-issuer=/C=RU/ST=Moskow/L=Stupino/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks/emailAddress=root@localhost
+issuer=/##########################tworks/CN=ldap1.unix.networks/emailAddress=root@localhost
 ---
 Acceptable client certificate CA names
 /C=RU/ST=Moskow/L=Stupino/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks/emailAddress=root@localhost
