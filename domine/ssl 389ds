@@ -10,9 +10,9 @@
 writing new private key to 'private/ca-cert.key'
 Enter PEM pass phrase:
 Verifying - Enter PEM pass phrase:
-Country Name (2 letter code) [XX]:RU
-State or Province Name (full name) []:Moskow
-Locality Name (eg, city) [Default City]:Stupino
+Country Name (2 letter code) [XX]:
+State or Province Name (full name) []:
+Locality Name (eg, city) [Default City]:
 Organization Name (eg, company) [Default Company Ltd]:unix.networks
 Organizational Unit Name (eg, section) []:
 Common Name (eg, your name or your server's hostname) []:ldap1.unix.networks
@@ -114,59 +114,16 @@ tcp6       0      0 :::389                  :::*                    LISTEN      
 # Тест коннект.
 # openssl s_client -connect ldap1:636 -ssl3
 CONNECTED(00000003)
-depth=1 C = RU, ST = Moskow, L = Stupino, O = unix.networks, OU = ldap1.unix.networks, CN = ldap1.unix.networks, emailAddress = root@localhost
-verify error:num=19:self signed certificate in certificate chain
-verify return:0
----
-Certificate chain
- 0 s:/C=RU/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks
-   i:/C=RU/ST=Moskow/L=Stupino/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks/emailAddress=root@localhost
- 1 s:/C=RU/ST=Moskow/L=Stupino/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks/emailAddress=root@localhost
-   i:/C=RU/ST=Moskow/L=Stupino/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks/emailAddress=root@localhost
----
-Server certificate
------BEGIN CERTIFICATE-----
-MIID+zCCAuOgAwIBAgIBAjANBgkqhkiG9w0BAQsFADCBozELMAkGA1UEBhMCUlUx
-DzANBgNVBAgMBk1vc2tvdzEQMA4GA1UEBwwHU3R1cGlubzEWMBQGA1UECgwNdW5p
-eC5uZXR3b3JrczEcMBoGA1UECwwTbGRhcDEudW5peC5uZXR3b3JrczEcMBoGA1UE
-AwwTbGRhcDEudW5peC5uZXR3b3JrczEdMBsGCSqGSIb3DQEJARYOcm9vdEBsb2Nh
-bGhvc3QwHhcNMTUwNzIyMTY1NTExWhcNMTYwNzIxMTY1NTExWjBhMQswCQYDVQQG
-################################################################
-################################################################
-ZgRADQGOdcoQhKmsGyiCGf2GpPKcXc4NnNIMxHLJQ5o+OcAvTxnzSOMtSytFcfKv
-JL+0AUU6ozUhrX6gKocvsK+zC9hH9XnLgJsUM3be2l0iRM1h5VtAkmw3bFqSGNJ+
-DxvH5F0YQC8WGlFIzVZdSXgnx5gqKzp2f7sC/lVZSAd4UG3jsC6zEPcizEIaF72A
-MbIKYgazJPSTsurXbZp4qfvg4ETsiryBz+YOzYqsxmdFB0h/br8cLi6dliwErrFg
-h15dslAOyo0RhRu/P0KvvFWXjVWgUcITHoGty3ShK41Ax6Iv5RrrULu5dvKrWGUq
-KV7uKNYs7lvBq2aiKQOM
------END CERTIFICATE-----
-subject=/C=RU/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks
-issuer=/##########################tworks/CN=ldap1.unix.networks/emailAddress=root@localhost
----
-Acceptable client certificate CA names
-/C=RU/ST=Moskow/L=Stupino/O=unix.networks/OU=ldap1.unix.networks/CN=ldap1.unix.networks/emailAddress=root@localhost
----
-SSL handshake has read 2434 bytes and written 475 bytes
----
-New, TLSv1/SSLv3, Cipher is AES128-SHA
-Server public key is 2048 bit
-Secure Renegotiation IS supported
-Compression: NONE
-Expansion: NONE
-SSL-Session:
-    Protocol  : SSLv3
-    Cipher    : AES128-SHA
-    Session-ID: 02D74873193FF7C3C612F661A2B0C5A8D71134C1379A41A173CF1E200B3DDBA1
-    Session-ID-ctx: 
-    Master-Key: FF15C6E6C42224337E73ED8CCED15B3C4C2F4D35C197D7419855BC066C5C56CEA95F2F394AD526309911E93598FBC658
-    Key-Arg   : None
-    PSK identity: None
-    PSK identity hint: None
-    SRP username: None
-    Start Time: 1437584777
-    Timeout   : 7200 (sec)
-    Verify return code: 19 (self signed certificate in certificate chain)
----
 
 
 ca-cert.crt юзаем на клиентской машине.
+
+#отключение anon bind
+~# nano disableanonbind.ldif
+> dn: cn=config
+> changetype: modify
+> replace: nssldapd-allow-anonymous-access
+> replace: nssldapd-allow-anonymous-access: rootdse
+~# ldapmodify -x -D "cn=Dirmngr" -W -f ./disableanonbind.ldif
+
+
