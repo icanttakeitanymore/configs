@@ -127,3 +127,26 @@ ca-cert.crt юзаем на клиентской машине.
 ~# ldapmodify -x -D "cn=Dirmngr" -W -f ./disableanonbind.ldif
 
 
+настройки nslcd
+ debconf-show nslcd
+* nslcd/ldap-bindpw: (password omitted)
+  libraries/restart-without-asking: false
+* nslcd/ldap-auth-type: simple
+  nslcd/restart-services:
+  nslcd/xdm-needs-restart:
+* nslcd/ldap-cacertfile: /etc/ldap/ca-cert.crt
+  nslcd/ldap-sasl-secprops:
+  nslcd/disable-screensaver:
+* nslcd/ldap-starttls: true
+* nslcd/ldap-base: dc=unix,dc=networks
+  nslcd/ldap-sasl-mech:
+  nslcd/ldap-sasl-realm:
+  nslcd/ldap-sasl-authzid:
+  nslcd/ldap-sasl-authcid:
+* nslcd/ldap-reqcert: demand
+* nslcd/ldap-binddn: cn=Dirmngr
+* nslcd/ldap-uris: ldap:///ldap1.unix.networks/
+  nslcd/ldap-sasl-krb5-ccname: /var/run/nslcd/nslcd.tkt
+  nslcd/restart-failed:
+
+
