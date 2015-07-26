@@ -65,5 +65,5 @@ NSSPassPhraseDialog  file:///etc/dirsrv/admin-serv/password.txt
     должно быть два процесса, один из них апач, если процесс постоянно меняет номер, или егоlo нет - что-то не так с password.txt
     теперь 389-console будет работать по https, при входе попросит аксептнуть сертификат.
 
-    Status API Training Shop Blog About Help 
+  
 
