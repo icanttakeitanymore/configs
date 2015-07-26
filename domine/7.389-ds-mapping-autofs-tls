@@ -1,0 +1,84 @@
+# пока не доделал.
+# Для начала нам потребуется создать конфигурацию с картами для автомаунта в 389-ds.
+
+
+# Контейнер для карты auto.master 
+dn: ou=auto.master,dc=unix,dc=networks
+ou: auto.master
+objectClass: top
+objectClass: automountMap
+
+
+# Точка монтирования
+dn: cn=/home,ou=auto.master,dc=unix,dc=networks
+objectClass: automount
+cn: /home
+automountInformation: ldap:ldap1.unix.networks:ou=auto.home,dc=unix,dc=networks
+
+# Контейнер для конфигураций autofs
+dn: ou=auto.home,dc=unix,dc=networks
+ou: auto.home
+objectClass: top
+objectClass: organizationalUnit
+objectClass: automountmap
+
+
+# Настройка монтирования для конечного юзера
+dn: cn=boris,ou=auto.home,dc=unix,dc=networks
+cn: boris
+objectClass: automount
+automountInformation: -rsize=8192,wsize=8192,intr ldap1.unix.networks:/home/boris
+
+# Так же можно настроить точку монтирования по имени для всех юзеров.
+dn: cn=/,ou=auto.home,dc=unix,dc=networks
+cn: /
+objectClass: automount
+automountInformation: -rsize=8192,wsize=8192,intr ldap1.unix.networks:/home/&
+
+# Сохраняем и кладём в базу 
+$ ldapadd -x -W -D  'cn=Directory Manager' -f auto.master.ldif
+
+# Теперь нужно настроить  export 
+# Закидываем туда 
+
+/home  *(rw,fsid=0,insecure,no_subtree_check)
+/home  gss/krb5(rw,fsid=0,insecure,no_subtree_check)
+/home  gss/krb5i(rw,fsid=0,insecure,no_subtree_check)
+/home  gss/krb5p(rw,fsid=0,insecure,no_subtree_check)
+
+# Клиентская машина
+# Тут предстоит немного мучений, ну во всяком случае я норм так натерпелся :D
+# Устанавливаем и настраиваем autofs-ldap
+# /etc/default/autofs
+MASTER_MAP_NAME="ou=auto.master,dc=unix,dc=networks"
+TIMEOUT=300
+BROWSE_MODE="no"
+SEARCH_BASE="ou=auto.master,dc=unix,dc=networks"
+LDAP_URI="ldap://ldap1.unix.networks/"
+MAP_OBJECT_CLASS="automountMap"
+ENTRY_OBJECT_CLASS="automount"
+MAP_ATTRIBUTE="ou"
+ENTRY_ATTRIBUTE="cn"
+VALUE_ATTRIBUTE="automountInformation"
+# /etc/autofs_ldap_auth.conf
+<?xml version="1.0" ?>
+<!--
+This files contains a single entry with multiple attributes tied to it.
+See autofs_ldap_auth.conf(5) for more information.
+-->
+
+<autofs_ldap_sasl_conf
+        usetls="yes"
+        tlsrequired="yes"
+        external_cert="/etc/ldap/ca-cert.crt"
+        authrequired="simple"
+        user="cn=Directory Manager"
+        secret="ПАРОЛЬ"
+        clientprinc="GSSAPI"
+ credentialcache="host/ldap1.unix.networks@UNIX.NETWORKS"
+/>
+# Как оказалось, этого мало, пришлось юзать strace, чтобы понять, почему не происходит соединение с ldap.
+# Ругань была на TLS но как оказалось, виноваты были отсутствующие библиотеки
+# Так как strace -e open automount -d -f сказал, что хочет библиотеки libxml2.so из /lib/x86_64-linux-gnu/tls/x86_64/
+# которую нужно будет переименовать именно в libxml2.so, а так же liblzma2_5.0.0-2_amd64.deb, который ложиться нормально.
+# После этих манипуляций оно начинает работать, но так как маут происходил без GSSAPI, думаю предстоит еще поковыряться.
