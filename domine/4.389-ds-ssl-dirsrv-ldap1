@@ -1,0 +1,152 @@
+# mkdir -p /etc/ssl/ldap; cd /etc/ssl/ldap/
+
+# touch index.txt
+# echo '01' > serial
+# echo '01' > crlnumber
+# mkdir private
+# mkdir certs
+# openssl req -new -x509 -extensions v3_ca -keyout private/ca-cert.key -out certs/ca-cert.crt -days 365
+
+writing new private key to 'private/ca-cert.key'
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+Country Name (2 letter code) [XX]:
+State or Province Name (full name) []:
+Locality Name (eg, city) [Default City]:
+Organization Name (eg, company) [Default Company Ltd]:unix.networks
+Organizational Unit Name (eg, section) []:
+Common Name (eg, your name or your server's hostname) []:ldap1.unix.networks
+Email Address []:root@localhost
+
+# chmod 400 private/ca-cert.key 
+
+nano ../openssl.cnf
+
+[ policy_match ]
+countryName             = optional
+stateOrProvinceName     = optional
+organizationName        = optional
+
+Generate and Sign the Server Certificate
+
+# 389-console -a http://localhost:9830
+
+Drill down to:
+  -> linuxrackers.com
+    -> ldap01.linuxrackers.com
+      -> Directory Server
+        -> Open
+
+#
+  -> Tasks(tab) -> Manage Certificates
+    -> Server Certs -> Request
+      -> 'Request certificate manually' -> Next
+        -> Sever Name: ldap1.unix.networks
+        -> Organization: unix-networks-org
+        -> Organization Unit:
+        -> City/locality: Moskow
+        -> Stat/province: Mosobl
+        -> Country/region: RU 
+          -> Next -> Yes -> 'Enter a Password'
+            -> Save to File "~/ldap1.unixnetworks.csr" -> "Save"
+              -> Done
+              
+
+$
+# mkdir /etc/ssl/ldap/recesive
+# mkdir -p ./demoCA/newcerts
+# cd ./demoCA/; touch index.txt;echo '01' > serial;echo '01' > crlnumber
+# mv ~/ldap1.unixnetworks.csr /etc/ssl/ldap/recesive
+# openssl ca -in /etc/ssl/ldap/recesive/ldap1.unixnetworks.csr -out /etc/ssl/ldap/newcerts/ldap1.unix.networks.com.crt  -keyfile /etc/ssl/ldap/private/ca-cert.key -cert /etc/ssl/ldap/certs/ca-cert.crt
+
+
+# 389-console #
+Drill down to:
+  -> linuxrackers.com
+    -> ldap01.linuxrackers.com
+      -> Directory Server
+        -> Open
+
+In the Server Console do the following to install the CA Public Cert:
+
+  -> Tasks(tab) -> Manage Certificates
+    -> CA Certs -> Install
+      -> 'in this local file' -> Browse
+        -> "Select: /etc/ssl/ldap/certs/ca-cert.crt" # Можно просто вставить содержимое ключа
+          -> Next -> Next -> Next -> Done
+
+In the Server Console do the following to install the Server Cert:
+  -> Tasks(tab) -> Manage Certificates
+    -> Server Certs -> Install
+      -> 'in this local file' -> Browse
+        -> "Select:/etc/ssl/ldap/ewcerts/ldap1.unixnetworks.com.crt" # Можно просто вставить содержимое ключа
+          -> Open -> Next -> Next -> Next 
+            -> 'Enter in the password used when creating the csr'
+              -> Done
+
+In the Server Console do the follow to enable SSL:
+  -> Configuration(tab) -> Encryption(subtab)
+    -> 'Enable SSL for this server'
+      -> 'Use this cipher family: RSA'
+      -> Check 'Use SSL in Console'
+        -> 'Save' -> 'Ok'
+        
+#ds on 636 port#
+nano /etc/dirsrv/admin-serv/password.conf
+Internal (Software) Token:password
+chmod 400 /etc/dirsrv/admin-serv/password.conf
+chown dirsrv. /etc/dirsrv/admin-serv/password.conf
+nano etc/dirsrv/admin-serv/nss.conf
+NSSPassPhraseDialog  file://///etc/dirsrv/admin-serv/password.conf
+#
+nano /etc/dirsrv/slapd-ldap1/pin.txt
+Internal (Software) Token:password
+chmod 400 /etc/dirsrv/slapd-ldap1/pin.txt
+chown dirsrv. /etc/dirsrv/slapd-ldap1/pin.txt
+
+#Ребут сервисов
+# netstat -plnt| egrep '389|636'
+
+root@ldap1:/etc/ssl/ldap# netstat -plnt| egrep '389|636'
+tcp6       0      0 :::636                  :::*                    LISTEN      727/ns-slapd    
+tcp6       0      0 :::389                  :::*                    LISTEN      727/ns-slapd   
+
+# Тест коннект.
+# openssl s_client -connect ldap1:636 -ssl3
+CONNECTED(00000003)
+
+
+ca-cert.crt юзаем на клиентской машине.
+
+#отключение anon bind
+~# nano disableanonbind.ldif
+> dn: cn=config
+> changetype: modify
+> replace: nssldapd-allow-anonymous-access
+> replace: nssldapd-allow-anonymous-access: rootdse
+~# ldapmodify -x -D "cn=Dirmngr" -W -f ./disableanonbind.ldif
+
+
+настройки nslcd
+ debconf-show nslcd
+* nslcd/ldap-bindpw: (password omitted)
+  libraries/restart-without-asking: false
+* nslcd/ldap-auth-type: simple
+  nslcd/restart-services:
+  nslcd/xdm-needs-restart:
+* nslcd/ldap-cacertfile: /etc/ldap/ca-cert.crt
+  nslcd/ldap-sasl-secprops:
+  nslcd/disable-screensaver:
+* nslcd/ldap-starttls: true
+* nslcd/ldap-base: dc=unix,dc=networks
+  nslcd/ldap-sasl-mech:
+  nslcd/ldap-sasl-realm:
+  nslcd/ldap-sasl-authzid:
+  nslcd/ldap-sasl-authcid:
+* nslcd/ldap-reqcert: demand
+* nslcd/ldap-binddn: cn=Dirmngr
+* nslcd/ldap-uris: ldap:///ldap1.unix.networks/
+  nslcd/ldap-sasl-krb5-ccname: /var/run/nslcd/nslcd.tkt
+  nslcd/restart-failed:
+
+

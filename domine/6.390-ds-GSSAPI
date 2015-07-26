@@ -1,0 +1,228 @@
+# У нас уже есть 389-ds, отключен анон бинд, есть ca-cert, настроен nslcd.
+# Манипуляции с 389-ds.
+# GSS-API маппинг
+#389-console -a http://localhost:9830
+
+ -> unix.networks
+    -> ldap1.unix.networks
+      -> Directory Server
+        -> Open
+
+  -> Configuration(tab) -> SASL Mappings(subtab)
+    -> Add
+      -> Name:                gssapi-map
+      -> Regular Expression:  uid=(.*),cn=UNIX.NETWORKS,cn=gssapi,cn=auth # cn=Реалм кербероса
+      -> Search Base DN:      uid=\1,ou=People,dc=unix,dc=networks # путь по которому будем искать фильтром, пользователи будут доступны из этой базы
+      -> Search Filter:       (objectClass=*) # сам фильтр
+        -> Ok -> Save                         # сохраняем
+#######
+###
+# устанавливаем krb5-admin-server krb5-kdc
+# генерим реальм
+root@ldap1:/etc/ssl/ldap# krb5_newrealm 
+This script should be run on the master KDC/admin server to initialize
+a Kerberos realm.  It will ask you to type in a master key password.
+This password will be used to generate a key that is stored in
+/etc/krb5kdc/stash.  You should try to remember this password, but it
+is much more important that it be a strong password than that it be
+remembered.  However, if you lose the password and /etc/krb5kdc/stash,
+you cannot decrypt your Kerberos database.
+Loading random data
+Initializing database '/var/lib/krb5kdc/principal' for realm 'UNIX.NETWORKS',
+master key name 'K/M@UNIX.NETWORKS'
+You will be prompted for the database Master Password.
+It is important that you NOT FORGET this password.
+Enter KDC database master key: 
+Re-enter KDC database master key to verify: 
+###
+###создаём принципал root и  принципал хоста с его кейтабом
+
+root@ldap1:/etc/ssl/ldap# kadmin.local 
+Authenticating as principal root/admin@UNIX.NETWORKS with password.
+kadmin.local:  addprinc root/admin
+WARNING: no policy specified for root/admin@UNIX.NETWORKS; defaulting to no policy
+Enter password for principal "root/admin@UNIX.NETWORKS": 
+Re-enter password for principal "root/admin@UNIX.NETWORKS": 
+Principal "root/admin@UNIX.NETWORKS" created.
+kadmin.local:  addprinc -randkey host/ldap1.unix.networks
+WARNING: no policy specified for host/ldap1.unix.networks@UNIX.NETWORKS; defaulting to no policy
+Principal "host/ldap1.unix.networks@UNIX.NETWORKS" created.
+kadmin.local:  ktadd -k /etc/krb5.keytab host/ldap1.unix.networks
+Entry for principal host/ldap1.unix.networks with kvno 2, encryption type aes256-cts-hmac-sha1-96 added to keytab WRFILE:/etc/krb5.keytab.
+Entry for principal host/ldap1.unix.networks with kvno 2, encryption type arcfour-hmac added to keytab WRFILE:/etc/krb5.keytab.
+Entry for principal host/ldap1.unix.networks with kvno 2, encryption type des3-cbc-sha1 added to keytab WRFILE:/etc/krb5.keytab.
+Entry for principal host/ldap1.unix.networks with kvno 2, encryption type des-cbc-crc added to keytab WRFILE:/etc/krb5.keytab.
+kadmin.local:  q
+
+
+# Допишем реальм в /etc/krb5.conf, тк дебконф его не вписал.
+[domain_realm]
+        .unix.networks = UNIX.NETWORKS
+        unix.networks = UNIX.NETWORKS
+# Допишем права в  /etc/krb5kdc/kadm5.acl 
+*/admin@UNIX.NETWORKS        *
+
+
+# Стартуем сервисы
+
+root@ldap1:/etc/ssl/ldap# /etc/init.d/krb5-admin-server restart
+[ ok ] Restarting krb5-admin-server (via systemctl): krb5-admin-server.service.
+root@ldap1:/etc/ssl/ldap# /etc/init.d/krb5-kdc restart
+[ ok ] Restarting krb5-kdc (via systemctl): krb5-kdc.service.
+# Создаём кейтаб для инстанса ldap сервера
+root@ldap1:/etc/ssl/ldap# kadmin.local 
+Authenticating as principal root/admin@UNIX.NETWORKS with password.
+kadmin.local:  listprincs 
+K/M@UNIX.NETWORKS
+host/ldap1.unix.networks@UNIX.NETWORKS
+kadmin/admin@UNIX.NETWORKS
+kadmin/changepw@UNIX.NETWORKS
+kadmin/ldap1.unix.networks@UNIX.NETWORKS
+krbtgt/UNIX.NETWORKS@UNIX.NETWORKS
+root/admin@UNIX.NETWORKS
+kadmin.local:  addprinc -randkey ldap/ldap1.unix.networks@UNIX.NETWORKS
+WARNING: no policy specified for ldap/ldap1.unix.networks@UNIX.NETWORKS; defaulting to no policy
+Principal "ldap/ldap1.unix.networks@UNIX.NETWORKS" created.
+kadmin.local:  ktadd -k /etc/dirsrv/ds.keytab ldap/ldap1.unix.networks
+Entry for principal ldap/ldap1.unix.networks with kvno 2, encryption type aes256-cts-hmac-sha1-96 added to keytab WRFILE:/etc/dirsrv/ds.keytab.
+Entry for principal ldap/ldap1.unix.networks with kvno 2, encryption type arcfour-hmac added to keytab WRFILE:/etc/dirsrv/ds.keytab.
+Entry for principal ldap/ldap1.unix.networks with kvno 2, encryption type des3-cbc-sha1 added to keytab WRFILE:/etc/dirsrv/ds.keytab.
+Entry for principal ldap/ldap1.unix.networks with kvno 2, encryption type des-cbc-crc added to keytab WRFILE:/etc/dirsrv/ds.keytab.
+kadmin.local:  
+# Должен получиться такой лист принципалов
+kadmin.local:  listprincs 
+K/M@UNIX.NETWORKS
+host/ldap1.unix.networks@UNIX.NETWORKS
+kadmin/admin@UNIX.NETWORKS
+kadmin/changepw@UNIX.NETWORKS
+kadmin/ldap1.unix.networks@UNIX.NETWORKS
+krbtgt/UNIX.NETWORKS@UNIX.NETWORKS
+ldap/ldap1.unix.networks@UNIX.NETWORKS
+root/admin@UNIX.NETWORKS
+kadmin.local:  
+# А так же коммандой kdadd мы выгрузили ds.keytab, нужно дать права dirsrv, чтобы он смог его читать
+
+root@ldap1:/etc/ssl/ldap# chown dirsrv. /etc/dirsrv/ds.keytab 
+root@ldap1:/etc/ssl/ldap# chmod 600 /etc/dirsrv/ds.keytab 
+
+# В интернетах пишут про то что нужно в /etc/sysconfig/dirsrv прописать KRB5_KTNAME=/etc/dirsrv/ds.keytab; export KRB5_KTNAME
+# не знаю как для RHEL подобных дистров, но в дебиане это не работает, папка sysconfig у нас переехала в /etc/defaults, конфиг dirsrv не исполняемый, в честь чего
+# KRB5_KTNAME=/etc/dirsrv/ds.keytab мы пишем в /etc/default/dirsrv-ldap1. 
+# Ребутаем dirsrv.
+
+# сейчас если мы залогинимся юзером из ldap мы получим следующее
+root@ldap1:/etc/ssl/ldap# login boris
+Пароль: 
+Последний вход в систему:Чт июл 23 20:05:49 MSK 2015на pts/2
+Linux ldap1 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt11-1 (2015-05-24) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+boris@ldap1:~$ klist 
+klist: Credentials cache file '/tmp/krb5cc_5001' not found
+boris@ldap1:~$ k5start 
+Kerberos initialization for boris@UNIX.NETWORKS
+k5start: error getting credentials: Client 'boris@UNIX.NETWORKS' not found in Kerberos database
+boris@ldap1:~$ 
+boris@ldap1:~$ logout
+root@ldap1:/etc/ssl/ldap# getent passwd boris
+boris:*:5001:5000:nice:/home/boris:/bin/bash
+root@ldap1:/etc/ssl/ldap#
+# на сервере нам требуется добавить принципала для boris.
+root@ldap1:/etc/ssl/ldap# kadmin.local 
+Authenticating as principal root/admin@UNIX.NETWORKS with password.
+kadmin.local:  addprinc boris
+WARNING: no policy specified for boris@UNIX.NETWORKS; defaulting to no policy
+Enter password for principal "boris@UNIX.NETWORKS": 
+Re-enter password for principal "boris@UNIX.NETWORKS": 
+Principal "boris@UNIX.NETWORKS" created.
+
+# теперь логинимся снова
+root@ldap1:/etc/ssl/ldap# login boris
+Пароль: 
+Последний вход в систему:Вс июл 26 16:02:28 MSK 2015на pts/1
+Linux ldap1 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt11-1 (2015-05-24) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+boris@ldap1:~$ k5start 
+Kerberos initialization for boris@UNIX.NETWORKS
+Password for boris@UNIX.NETWORKS: 
+boris@ldap1:~$ klist
+Ticket cache: FILE:/tmp/krb5cc_5001
+Default principal: boris@UNIX.NETWORKS
+
+Valid starting       Expires              Service principal
+26.07.2015 16:04:06  27.07.2015 02:04:04  krbtgt/UNIX.NETWORKS@UNIX.NETWORKS
+boris@ldap1:~$ ldapsearch -Y GSSAPI '(uid=boris)'
+SASL/GSSAPI authentication started
+SASL username: boris@UNIX.NETWORKS
+SASL SSF: 56
+SASL data security layer installed.
+# extended LDIF
+#
+# LDAPv3
+# base <dc=unix,dc=networks> (default) with scope subtree
+# filter: (uid=boris)
+# requesting: ALL
+#
+
+# boris, People, unix.networks
+dn: uid=boris,ou=People,dc=unix,dc=networks
+givenName:: 0J/QvtC70L7Qt9C+0LI=
+sn:: 0JHQvtGA0LjRgQ==
+loginShell: /bin/bash
+gidNumber: 5000
+uidNumber: 5001
+mail: polozovbv@gmail.com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetorgperson
+objectClass: posixAccount
+uid: boris
+gecos: nice
+cn:: 0J/QvtC70L7Qt9C+0LIg0JHQvtGA0LjRgQ==
+preferredLanguage: ru
+homeDirectory: /home/boris
+
+# search result
+search: 4
+result: 0 Success
+
+# numResponses: 2
+# numEntries: 1
+
+
+# Из этого можно сделать вывод что GSS-API воркает, теперь на клиента нам требуется поставить только libpam-krb5
+# Выполняем pam-auth-update
+# Логинимся.
+login boris
+Password: 
+Последний вход в систему:Вс июл 26 16:07:37 MSK 2015на pts/1
+Linux ldap1 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt11-1 (2015-05-24) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+boris@ldap1:~$ klist
+Ticket cache: FILE:/tmp/krb5cc_5001_Kz9m6d
+Default principal: boris@UNIX.NETWORKS
+
+Valid starting       Expires              Service principal
+26.07.2015 16:08:27  27.07.2015 02:08:27  krbtgt/UNIX.NETWORKS@UNIX.NETWORKS
+	renew until 27.07.2015 16:08:27
+boris@ldap1:~$ 
+
+# Работает =)

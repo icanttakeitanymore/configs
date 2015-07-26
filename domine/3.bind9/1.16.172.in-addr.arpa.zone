@@ -1,0 +1,14 @@
+$TTL 86400
+1.16.172.in-addr.arpa.  IN SOA unix.networks. root.unix.networks. 2015080613 (
+                                                10h  ; slave-server connection period
+                                                1h   ; retry
+                                                1w   ; life-time
+                                                1h ) ; negative ttl
+                           
+
+  NS ns1.unix.networks.
+
+1 PTR ldap1.unix.networks.
+10 PTR host1.unix.networks.
+11 PTR host2.unix.networks.
+12 PTR host3.unix.networks.

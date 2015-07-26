@@ -1,0 +1,69 @@
+
+# 389-console -a http://localhost:9830
+
+
+  -> unix.networks
+    -> ldap1.unix.networks
+      -> Admin Server
+        -> Open
+-> Tasks(tab) -> Manage Certificates
+    -> Server Certs -> Request
+      -> 'Request certificate manually' -> Next
+        -> Sever Name: ldap1.unix.networks
+        -> Organization: unix.networks
+        -> Organization Unit: admin-srv
+        -> City/locality: RU
+        -> Stat/province: RU
+        -> Country/region: RU 
+          -> Next -> Yes -> 'Enter a Password'
+            -> Save to File "~/admin-srv-ldap1.unixnetworks.csr" -> "Save"
+              -> Done
+cd /etc/ssl/ldap# 
+cp cp ~/admin-srv-ldap1.unixnetworks.crs ./recesive/
+openssl ca -in /etc/ssl/ldap/recesive/admin-srv-ldap1.unixnetworks.crs -out /etc/ssl/ldap/newcerts/admin-srv-ldap1.unix.networks.com.crt  -keyfile /etc/ssl/ldap/private/ca-cert.key -cert /etc/ssl/ldap/certs/ca-cert.crt
+-> Tasks(tab) -> Manage Certificates
+    -> CA Certs -> Install
+      -> 'in this local file' -> Browse
+        -> "Select: /etc/ssl/ldap/certs/ca-cert.crt" # Можно просто вставить содержимое ключа
+          -> Next -> Next -> Next -> Done
+          
+In the Server Console do the following to install the Server Cert:
+  -> Tasks(tab) -> Manage Certificates
+    -> Server Certs -> Install
+      -> 'in this local file' -> Browse
+        -> "Select:/etc/ssl/ldap/newcerts/admin-srv-ldap1.unixnetworks.com.crt" # Можно просто вставить содержимое ключа
+          -> Open -> Next -> Next -> Next 
+            -> 'Enter in the password used when creating the csr'
+              -> Done
+              
+#Дабавляем токен
+nano /etc/dirsrv/admin-serv/password.txt
+internal:password
+chmod 400 /etc/dirsrv/admin-serv/password.txt
+chown dirsrv. /etc/dirsrv/admin-serv/password.txt
+nano etc/dirsrv/admin-serv/nss.conf
+NSSPassPhraseDialog  file:///etc/dirsrv/admin-serv/password.txt
+# конфигурируем dirsrv-admin из консоли
+# -> Configuration
+  -> Encryption
+     -> + Enable SSL for server
+     -> + Use this cipher family: RSA
+  -> Configuration DS
+     -> + Secure Connection # порт поменяется на 636
+  -> User DS
+     ->Set User Directory 
+     -> LDAP host and port : ldap1.unix.networks:636
+     -> + Secure Connection
+     -> User Directory Subtree : ou=People,dc=unix,dc=networks
+       Так как отключен анон бинд настраиваем юзера
+     -> Bind DN: cn= Dirmngr
+     -> Bind Password : пароль
+  + SAVE
+    рестартим админ сервер
+    после рестарта в  процессах должен висеть apache2 с экзекнутым конфигом admin-dirsrv
+     watch -n 1 'ps -aux | grep dirsrv'
+    должно быть два процесса, один из них апач, если процесс постоянно меняет номер, или егоlo нет - что-то не так с password.txt
+    теперь 389-console будет работать по https, при входе попросит аксептнуть сертификат.
+
+    Status API Training Shop Blog About Help 
+

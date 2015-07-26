@@ -1,0 +1,16 @@
+$TTL 3600
+@ IN SOA unix.networks. root.unix.networks. 2015080613 (
+                                                10h ; slave-server connection preiod
+                                                1h  ; retry
+                                                1w  ; lifetime
+                                                1h ); negative
+@ IN A 172.16.1.1
+@ IN NS ns1.unix.networks.
+ns1 IN A 172.16.1.1
+
+vboxdhcp.unix.networks. A 10.0.2.2
+eth0.unix.networks. A 10.0.2.15
+ldap1.unix.networks.  A 172.16.1.1
+host1.unix.networks.  A 172.16.1.10
+host2.unix.networks.  A 172.16.1.11
+host3.unix.networks.  A 172.16.1.39
