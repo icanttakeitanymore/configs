@@ -61,6 +61,7 @@ MAP_ATTRIBUTE="ou"
 ENTRY_ATTRIBUTE="cn"
 VALUE_ATTRIBUTE="automountInformation"
 # /etc/autofs_ldap_auth.conf
+
 <?xml version="1.0" ?>
 <!--
 This files contains a single entry with multiple attributes tied to it.
@@ -68,15 +69,16 @@ See autofs_ldap_auth.conf(5) for more information.
 -->
 
 <autofs_ldap_sasl_conf
-        usetls="yes"
-        tlsrequired="yes"
+	usetls="yes"
+	tlsrequired="yes"
         external_cert="/etc/ldap/ca-cert.crt"
         authrequired="simple"
         user="cn=Directory Manager"
-        secret="ПАРОЛЬ"
-        clientprinc="GSSAPI"
- credentialcache="host/ldap1.unix.networks@UNIX.NETWORKS"
+        secret="ooafvv0tgbu"
+        aithtype="GSSAPI"
+	clientprinc="nfs/host1.unix.networks@UNIX.NETWORKS"
 />
+
 # Как оказалось, этого мало, пришлось юзать strace, чтобы понять, почему не происходит соединение с ldap.
 # Ругань была на TLS но как оказалось, виноваты были отсутствующие библиотеки
 # Так как strace -e open automount -d -f сказал, что хочет библиотеки libxml2.so из /lib/x86_64-linux-gnu/tls/x86_64/
