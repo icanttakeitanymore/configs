@@ -1,5 +1,69 @@
 # пока не доделал.
-# Для начала нам потребуется создать конфигурацию с картами для автомаунта в 389-ds.
+# С чего всё же стоит начать. С настройки экспортов и NFS сервера
+# Идём в /etc/default/nfs-kernel-server
+# Нужно включить rpc.svcgssd.
+NEEED_SVCGSSD="yes"
+# Оптция для дебага
+RPCSVCGSSDOPTS="-f"
+# Идём в /etc/default/nfs-common, так же обязательно включаем это на клиентской машине.
+NEED_STATD=yes
+NEED_IDAMAPD=yes
+NEED_GSSD=yes
+# Идём в /etc/idmapd.conf, и это тоже должно быть на клиентской машине, иначе у нас не будут мапиться в фс uid gid юзеров.
+Domain = unix.networks
+[Translation]
+Method=nsswitch
+# Идём в /etc/exports. тут немного интересного. для того чтобы у нас был маунт подкатологов, например server:/home/boris в /home/boris
+# нам нужно чтобы nfs у нас мог экспортить подкаталоги из айноды каталога /home, для этого нам нужно не применять опцию no_subtree_check.
+# с той картой которая будет приведена ниже это обязательно. О плюсах и минусах данного подхода можно погуглить. :)
+/home gss/krb5(rw,fsid=0,insecure,async,anonuid=65534,anongid=65534)
+# так же есть вариант юзать krb5i и krb5p для большей секъюрности, krb5p шифрует весь трафик, но ресурсов на передачу трафика
+# нужно будет значительно больше (вроде как в 3~ раза)
+# нам нужно завести принципалы nfs в керберос, про зависимость в именах принципалов можно почитать в том же гугле, просто сообщаю, что это важно.
+# нам понадобится выполнить kadmin.local и в консоли админа:
+addprinc -randkey host/host1.unix.networks@UNIX.NETWORKS
+addprinc -randkey host/ldap1.unix.networks@UNIX.NETWORKS 
+addprinc -randkey nfs/host1.unix.networks@UNIX.NETWORKS
+addprinc -randkey nfs/ldap1.unix.networks@UNIX.NETWORKS
+# нам понадобится добавить ключи в кейтабы сервера и клиента, каждому свои.
+# делается это коммандой ktadd, когда выполняется ktadd без переменной -k /path/to/file, запись помещается в дефолтный кейтаб в /etc/krb5.keytab
+# коммандой ktutil можно посмотреть, что есть в кейтабе.
+# ktutil 
+ktutil:  rkt /etc/krb5.keytab 
+ktutil:  list
+slot KVNO Principal
+---- ---- ---------------------------------------------------------------------
+   1    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   2    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   3    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   4    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   5    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+   6    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+   7    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+   8    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+# Такая информация у нас будет храниться в нашем кейтабе на сервере.
+# Информацию о ключах клиента мы кинем в отдельный кейтаб, пусть это будет /tmp/home1.keytab
+# Скопируем кейтаб на машину клиента.
+scp /tmp/home1.keytab root@home:/etc/krb.keytab
+# такая информация должна храниться в кейтабе клиента.
+~# ktutil 
+ktutil:  rkt /etc/krb5.keytab 
+ktutil:  list
+slot KVNO Principal
+---- ---- ---------------------------------------------------------------------
+   1    3   host/host1.unix.networks@UNIX.NETWORKS
+   2    3   host/host1.unix.networks@UNIX.NETWORKS
+   3    3   host/host1.unix.networks@UNIX.NETWORKS
+   4    3   host/host1.unix.networks@UNIX.NETWORKS
+   5    2    nfs/host1.unix.networks@UNIX.NETWORKS
+   6    2    nfs/host1.unix.networks@UNIX.NETWORKS
+   7    2    nfs/host1.unix.networks@UNIX.NETWORKS
+   8    2    nfs/host1.unix.networks@UNIX.NETWORKS
+# после запуска сервиса nfs-kernel-server, можно проверить, работает ли nfs через krb.
+# Для этого попробуем смантировать.
+mount -t nfs4 -o sec=krb5 ldap1.unix.networks:/boris /home/boris
+# если всё смантировалось, то всё сделано правильно.
+# Теперь нам потребуется создать конфигурацию с картами для автомаунта в 389-ds.
 
 
 # Контейнер для карты auto.master 
@@ -24,27 +88,14 @@ objectClass: automountmap
 
 
 # Настройка монтирования для конечного юзера
-dn: cn=boris,ou=auto.home,dc=unix,dc=networks
-cn: boris
-objectClass: automount
-automountInformation: -rsize=8192,wsize=8192,intr ldap1.unix.networks:/home/boris
-
-# Так же можно настроить точку монтирования по имени для всех юзеров.
 dn: cn=/,ou=auto.home,dc=unix,dc=networks
 cn: /
 objectClass: automount
-automountInformation: -rsize=8192,wsize=8192,intr ldap1.unix.networks:/home/&
+automountInformation: -vers=4,sec=krb5 ldap1.unix.networks:/&
+
 
 # Сохраняем и кладём в базу 
 $ ldapadd -x -W -D  'cn=Directory Manager' -f auto.master.ldif
-
-# Теперь нужно настроить  export 
-# Закидываем туда 
-
-/home  *(rw,fsid=0,insecure,no_subtree_check)
-/home  gss/krb5(rw,fsid=0,insecure,no_subtree_check)
-/home  gss/krb5i(rw,fsid=0,insecure,no_subtree_check)
-/home  gss/krb5p(rw,fsid=0,insecure,no_subtree_check)
 
 # Клиентская машина
 # Тут предстоит немного мучений, ну во всяком случае я норм так натерпелся :D
@@ -74,7 +125,7 @@ See autofs_ldap_auth.conf(5) for more information.
         external_cert="/etc/ldap/ca-cert.crt"
         authrequired="simple"
         user="cn=Directory Manager"
-        secret="ooafvv0tgbu"
+        secret="XXXXXXXXXX"
         aithtype="GSSAPI"
 	clientprinc="nfs/host1.unix.networks@UNIX.NETWORKS"
 />
