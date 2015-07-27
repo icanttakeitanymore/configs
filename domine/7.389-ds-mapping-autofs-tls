@@ -7,7 +7,7 @@ NEEED_SVCGSSD="yes"
 RPCSVCGSSDOPTS="-f"
 # Идём в /etc/default/nfs-common, так же обязательно включаем это на клиентской машине.
 NEED_STATD=yes
-NEED_IDAMAPD=yes
+NEED_IDMAPD=yes
 NEED_GSSD=yes
 # Идём в /etc/idmapd.conf, и это тоже должно быть на клиентской машине, иначе у нас не будут мапиться в фс uid gid юзеров.
 Domain = unix.networks
