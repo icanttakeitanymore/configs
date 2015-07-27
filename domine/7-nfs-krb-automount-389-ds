@@ -1,0 +1,139 @@
+# пока не доделал.
+# С чего всё же стоит начать. С настройки экспортов и NFS сервера
+# Идём в /etc/default/nfs-kernel-server
+# Нужно включить rpc.svcgssd.
+NEEED_SVCGSSD="yes"
+# Оптция для дебага
+RPCSVCGSSDOPTS="-f"
+# Идём в /etc/default/nfs-common, так же обязательно включаем это на клиентской машине.
+NEED_STATD=yes
+NEED_IDAMAPD=yes
+NEED_GSSD=yes
+# Идём в /etc/idmapd.conf, и это тоже должно быть на клиентской машине, иначе у нас не будут мапиться в фс uid gid юзеров.
+Domain = unix.networks
+[Translation]
+Method=nsswitch
+# Идём в /etc/exports. тут немного интересного. для того чтобы у нас был маунт подкатологов, например server:/home/boris в /home/boris
+# нам нужно чтобы nfs у нас мог экспортить подкаталоги из айноды каталога /home, для этого нам нужно не применять опцию no_subtree_check.
+# с той картой которая будет приведена ниже это обязательно. О плюсах и минусах данного подхода можно погуглить. :)
+/home gss/krb5(rw,fsid=0,insecure,async,anonuid=65534,anongid=65534)
+# так же есть вариант юзать krb5i и krb5p для большей секъюрности, krb5p шифрует весь трафик, но ресурсов на передачу трафика
+# нужно будет значительно больше (вроде как в 3~ раза)
+# нам нужно завести принципалы nfs в керберос, про зависимость в именах принципалов можно почитать в том же гугле, просто сообщаю, что это важно.
+# нам понадобится выполнить kadmin.local и в консоли админа:
+addprinc -randkey host/host1.unix.networks@UNIX.NETWORKS
+addprinc -randkey host/ldap1.unix.networks@UNIX.NETWORKS 
+addprinc -randkey nfs/host1.unix.networks@UNIX.NETWORKS
+addprinc -randkey nfs/ldap1.unix.networks@UNIX.NETWORKS
+# нам понадобится добавить ключи в кейтабы сервера и клиента, каждому свои.
+# делается это коммандой ktadd, когда выполняется ktadd без переменной -k /path/to/file, запись помещается в дефолтный кейтаб в /etc/krb5.keytab
+# коммандой ktutil можно посмотреть, что есть в кейтабе.
+# ktutil 
+ktutil:  rkt /etc/krb5.keytab 
+ktutil:  list
+slot KVNO Principal
+---- ---- ---------------------------------------------------------------------
+   1    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   2    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   3    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   4    3   host/ldap1.unix.networks@UNIX.NETWORKS
+   5    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+   6    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+   7    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+   8    3    nfs/ldap1.unix.networks@UNIX.NETWORKS
+# Такая информация у нас будет храниться в нашем кейтабе на сервере.
+# Информацию о ключах клиента мы кинем в отдельный кейтаб, пусть это будет /tmp/home1.keytab
+# Скопируем кейтаб на машину клиента.
+scp /tmp/home1.keytab root@home:/etc/krb.keytab
+# такая информация должна храниться в кейтабе клиента.
+~# ktutil 
+ktutil:  rkt /etc/krb5.keytab 
+ktutil:  list
+slot KVNO Principal
+---- ---- ---------------------------------------------------------------------
+   1    3   host/host1.unix.networks@UNIX.NETWORKS
+   2    3   host/host1.unix.networks@UNIX.NETWORKS
+   3    3   host/host1.unix.networks@UNIX.NETWORKS
+   4    3   host/host1.unix.networks@UNIX.NETWORKS
+   5    2    nfs/host1.unix.networks@UNIX.NETWORKS
+   6    2    nfs/host1.unix.networks@UNIX.NETWORKS
+   7    2    nfs/host1.unix.networks@UNIX.NETWORKS
+   8    2    nfs/host1.unix.networks@UNIX.NETWORKS
+# после запуска сервиса nfs-kernel-server, можно проверить, работает ли nfs через krb.
+# Для этого попробуем смантировать.
+mount -t nfs4 -o sec=krb5 ldap1.unix.networks:/boris /home/boris
+# если всё смантировалось, то всё сделано правильно.
+# Теперь нам потребуется создать конфигурацию с картами для автомаунта в 389-ds.
+
+
+# Контейнер для карты auto.master 
+dn: ou=auto.master,dc=unix,dc=networks
+ou: auto.master
+objectClass: top
+objectClass: automountMap
+
+
+# Точка монтирования
+dn: cn=/home,ou=auto.master,dc=unix,dc=networks
+objectClass: automount
+cn: /home
+automountInformation: ldap:ldap1.unix.networks:ou=auto.home,dc=unix,dc=networks
+
+# Контейнер для конфигураций autofs
+dn: ou=auto.home,dc=unix,dc=networks
+ou: auto.home
+objectClass: top
+objectClass: organizationalUnit
+objectClass: automountmap
+
+
+# Настройка монтирования для конечного юзера
+dn: cn=/,ou=auto.home,dc=unix,dc=networks
+cn: /
+objectClass: automount
+automountInformation: -vers=4,sec=krb5 ldap1.unix.networks:/&
+
+
+# Сохраняем и кладём в базу 
+$ ldapadd -x -W -D  'cn=Directory Manager' -f auto.master.ldif
+
+# Клиентская машина
+# Тут предстоит немного мучений, ну во всяком случае я норм так натерпелся :D
+# Устанавливаем и настраиваем autofs-ldap
+# /etc/default/autofs
+MASTER_MAP_NAME="ou=auto.master,dc=unix,dc=networks"
+TIMEOUT=300
+BROWSE_MODE="no"
+SEARCH_BASE="ou=auto.master,dc=unix,dc=networks"
+LDAP_URI="ldap://ldap1.unix.networks/"
+MAP_OBJECT_CLASS="automountMap"
+ENTRY_OBJECT_CLASS="automount"
+MAP_ATTRIBUTE="ou"
+ENTRY_ATTRIBUTE="cn"
+VALUE_ATTRIBUTE="automountInformation"
+# /etc/autofs_ldap_auth.conf
+
+<?xml version="1.0" ?>
+<!--
+This files contains a single entry with multiple attributes tied to it.
+See autofs_ldap_auth.conf(5) for more information.
+-->
+
+<autofs_ldap_sasl_conf
+	usetls="yes"
+	tlsrequired="yes"
+        external_cert="/etc/ldap/ca-cert.crt"
+        authrequired="simple"
+        user="cn=Directory Manager"
+        secret="XXXXXXXXXX"
+        aithtype="GSSAPI"
+	clientprinc="nfs/host1.unix.networks@UNIX.NETWORKS"
+/>
+
+# Как оказалось, этого мало, пришлось юзать strace, чтобы понять, почему не происходит соединение с ldap.
+# Ругань была на TLS но как оказалось, виноваты были отсутствующие библиотеки
+# Так как strace -e open automount -d -f сказал, что хочет библиотеки libxml2.so из /lib/x86_64-linux-gnu/tls/x86_64/
+# которую нужно будет переименовать именно в libxml2.so, а так же liblzma2_5.0.0-2_amd64.deb, который ложиться нормально,
+# но одно но, качать придётся из / Packages / squeeze / liblzma2 / amd64 / по ссылке к примеру 
+# http://ftp.de.debian.org/debian/pool/main/x/xz-utils/liblzma2_5.0.0-2_amd64.deb.
+# После этих манипуляций оно начинает работать, но так как маут происходил без GSSAPI, думаю предстоит еще поковыряться.
