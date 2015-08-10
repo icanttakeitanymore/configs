@@ -20,6 +20,7 @@ rm -rf /var/cache/*
 # меняем палоль рута
 passwd root
 # выходим из чрута
+# размаунчиваемся
 umount pxe-iso/sys/ -l
 umount pxe-iso/proc/ -l
 umount pxe-iso/dev/ -l
