@@ -1,0 +1,44 @@
+# Нам нужен live образ системы для загрузки на машине которую будем бекапить, для этого понадобится 
+# debootstrap. Установим его.
+sudo apt-get install debootstrap 
+# папочка для нашей rootfs 
+mkdir pxe-iso
+# Устанавливаем в папку базовую систему.
+sudo debootstrap --arch=i386 jessie pxe-iso/ http://mirror.yandex.ru/debian
+# чрутаемся 
+mount -t proc none pxe-iso/proc
+mount -o bind /dev pxe-iso/dev
+mount -t devpts devpts pxe-iso/dev/pts
+mount -t sysfs none pxe-iso/sys
+LANG=C HOME=/root chroot pxe-iso/
+# устанавливаем
+apt-get install openssh-server partimage ntfs-3g linux-image-686 live-boot
+# подчищаем
+rm -rf /tmp/*
+rm -rf /var/tmp/*
+rm -rf /var/cache/*
+# меняем палоль рута
+passwd root
+# выходим из чрута
+umount pxe-iso/sys/ -l
+umount pxe-iso/proc/ -l
+umount pxe-iso/dev/ -l
+umount pxe-iso/dev/pts -l
+# ставим кабачокфс-тулз
+sudo apt-get install squashfs-tools
+# создаём образ rootfs
+mksquashfs pxe-iso/ pxe.squashfs -noappend
+
+# В конфиге pxelinux.cfg/default 
+    label BackupRestore
+            MENU LABEL BackupRestore
+            kernel live/vmlinuz
+            append initrd=live/initrd.img boot=live noswap noeject ethdevice=enp0s3 ip=dhcp  vga=788 fetch=tftp://ldap1/live/filesystem.squashfs
+# На сервере устанавливаем сервер для partimage
+sudo apt-get install partimage-server
+# заводим юзера которым будем логиниться на сервер.
+sudo partimaged-passwd <user> <password> 
+# создаём папку под образа 
+mkdir /partimages
+# даём права на папку юзеру сервера.
+chown partimag: /partimages
