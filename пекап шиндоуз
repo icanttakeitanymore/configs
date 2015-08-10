@@ -1,3 +1,4 @@
+# Как это работает - http://www.youtube.com/watch?v=PCZ_phxlSh4&feature=youtu.be.
 # Нам нужен live образ системы для загрузки на машине которую будем бекапить, для этого понадобится 
 # debootstrap. Установим его.
 sudo apt-get install debootstrap 
@@ -19,6 +20,9 @@ rm -rf /var/tmp/*
 rm -rf /var/cache/*
 # меняем палоль рута
 passwd root
+# перегенерим initrd для live-boot
+update-initramfs -u
+# назначим hostname backuper
 # выходим из чрута
 # размаунчиваемся
 umount pxe-iso/sys/ -l
@@ -29,12 +33,19 @@ umount pxe-iso/dev/pts -l
 sudo apt-get install squashfs-tools
 # создаём образ rootfs
 mksquashfs pxe-iso/ pxe.squashfs -noappend
-
+# копируем что получилось из соответствующих папочек в папку tftp сервера
+tftp
+>>>>
+├── live
+│   ├── filesystem.squashfs
+│   ├── initrd.img
+│   └── vmlinuz
 # В конфиге pxelinux.cfg/default 
     label BackupRestore
             MENU LABEL BackupRestore
             kernel live/vmlinuz
             append initrd=live/initrd.img boot=live noswap noeject ethdevice=enp0s3 ip=dhcp  vga=788 fetch=tftp://ldap1/live/filesystem.squashfs
+# так же интерфейс может называться eth0
 # На сервере устанавливаем сервер для partimage
 sudo apt-get install partimage-server
 # заводим юзера которым будем логиниться на сервер.
