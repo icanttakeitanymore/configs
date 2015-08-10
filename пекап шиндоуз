@@ -54,3 +54,4 @@ sudo partimaged-passwd <user> <password>
 mkdir /partimages
 # даём права на папку юзеру сервера.
 chown partimag: /partimages
+# В инит скрипте нужно поставить опцию -D, а папку под образа прописать в /etc/default/partimag
