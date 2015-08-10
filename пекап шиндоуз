@@ -12,7 +12,7 @@ mount -t devpts devpts pxe-iso/dev/pts
 mount -t sysfs none pxe-iso/sys
 LANG=C HOME=/root chroot pxe-iso/
 # устанавливаем
-apt-get install openssh-server partimage ntfs-3g linux-image-686 live-boot
+apt-get install openssh-server partimage ntfs-3g linux-image-586 live-boot
 # подчищаем
 rm -rf /tmp/*
 rm -rf /var/tmp/*
