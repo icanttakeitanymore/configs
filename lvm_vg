@@ -4,6 +4,6 @@
  Создаем группу
 	sudo vgcreate $vg_name /dev/sdX /dev/sdX
         Volume group "$vg_name" successfully created
- Создаем раздел
+ Создаем логический раздел
         sudo lvcreate -l $size vg -n $lv_name
 	Logical volume "$lv_name" created
