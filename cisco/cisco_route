@@ -1,0 +1,135 @@
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+           +     +
+         С-2--sw-three----gw-two-----------------|
+
+				      |   ___________________________________
+
+                                      |--|провайдер, который дал нам vlan 777|
+                                      |   -----------------------------------
+
+                   gw-one-------------|
+                     |
+A-2 - |              |
+      --sw-one ---sw-trunk
+B-2 - |            |
+                   | 
+               sw-two
+                |   |
+               A-3 B-3
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+добавляем еще одно отделение(офис) и новый отдел C-2 192.16.16.2
+провайдер дает нам vlan 777
+для себя можно настроить его так
+# обычный свич
+Switch>
+Switch>en
+Switch#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#hos
+Switch(config)#hostname provider
+provider(config)#vlan 777
+provider(config-vlan)#sw
+provider(config-vlan)#swit
+provider(config-vlan)#switp
+provider(config-vlan)#name provider
+provider(config)#interface range g 1/1-2
+provider(config-if-range)#switchport trunk allowed 777
+provider(config-if-range)#switchport mode trunk 
+### gw-one
+настраиваем vlan 777
+gw-one(config)#interface GigabitEthernet 0/1.777
+gw-one(config-subif)#description Prowider-777
+gw-one(config-subif)#encapsulation dot1Q 777
+gw-one(config-subif)#ip address 192.16.2.1 255.255.255.252
+# не забыть включить интерфейс g 0/1
+gw-one(config)#interface GigabitEthernet 0/1
+gw-one(config-if)#no shutdown
+### gw-two - новое отделение
+Router>en
+Router#conf t
+Router(config)#interface fastEthernet 0/0.777
+Router(config-subif)#description Prowider-777
+Router(config-subif)#encapsulation dot1Q 777
+Router(config-subif)#ip address 192.16.2.2 255.255.255.252
+Router(config)#interface fa 0/0
+Router(config-if)#no shutdown 
+## не забыть хостнейм
+Router(config-if)#hostname gw-two
+
+теперь пин от gw-one идёт через провайдера до gw-two
+##
+но пропинговать сеть A не выдет
+
+gw-two(config)#do ping 192.16.3.1
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.16.3.1, timeout is 2 seconds:
+.....
+Success rate is 0 percent (0/5)
+!###
+!#нужно добавить аршруты
+!###
+gw-two#sh ip route
+Codes: C - connected, S - static, I - IGRP, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     192.16.2.0/30 is subnetted, 1 subnets
+C       192.16.2.0 is directly connected, FastEthernet0/0.777
+### пути в локалки маршрутизадор не знает, по этому нужно добвить дефолтный маршрут
+#аналог в линуксе
+#Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+#default         router.unix.net 0.0.0.0         UG    100    0        0 eth0
+
+
+gw-two(config)#ip route 0.0.0.0 0.0.0.0 192.16.2.1
+### ip route некстхоп маска шлюз
+получаем следущее
+
+gw-two#sh ip route
+Codes: C - connected, S - static, I - IGRP, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+       i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+       * - candidate default, U - per-user static route, o - ODR
+       P - periodic downloaded static route
+
+Gateway of last resort is 192.16.2.1 to network 0.0.0.0
+
+     192.16.2.0/30 is subnetted, 1 subnets
+C       192.16.2.0 is directly connected, FastEthernet0/0.777
+S*   0.0.0.0/0 [1/0] via 192.16.2.1
+gw-two#ping 192.16.3.1
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.16.3.1, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/1 ms
+###
+
+
+### теперь нужен обратный маршрут с gw-one в подсеть 192.16.16.0/24
+
+gw-one>
+gw-one>
+gw-one>en
+gw-one#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+gw-one(config)#ip route 192.16.16.0 255.255.255.0 192.16.2.2
+### настраиваем локалку на gw-one
+gw-two#conf t
+gw-two(config)#interface fastEthernet 0/1
+gw-two(config-if)#ip address 192.16.16.1 255.255.255.0
+gw-two(config-if)#no shutdown 
+####
+теперь мы можем пинговать компьютер C-2 192.16.16.2 c gw-one и C-2 видит подсети 192.16.3.0/24 192.16.4.0/24 и тп через сеть провайдера

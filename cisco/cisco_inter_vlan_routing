@@ -1,0 +1,42 @@
+нужно объединить три vlan 2,101,102 на gw-one, 
+будет три подсети и три айпишника, у vlan 2(name admin) 192.16.1.1, у vlan(name A) 101 192.16.3.1 у vlan 102(name B)  192.16.4.1
+
+карта
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+                  + gw-one
+                     |
+A-2 - |              |
+      --sw-one ---sw-trunk
+B-2 - |            |
+                   |
+               sw-two
+                |   |
+               A-3 B-3
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+для этого на sw-trunk порт ведущий к gw-one нужно поставить в trunk, и заалловить vlan 2,101,102
+sw-trunk(config)#interface GigabitEthernet1/2
+sw-trunk(config-if)#switchport trunk allowed vlan 2,101,102
+sw-trunk(config-if)#switchport mode trunk
+теперь gw-one : порты роутера не могут быть транковыми, всё что нужно сделать это добавить vlan 2,101,102 и создать саб интерфейсы и назначить им инкапсуляцию vlan и ip
+gw-one(config)vlan 2 name admin
+gw-one(config)vlan 101 name A
+gw-one(config)vlan 102 name B
+gw-one(config)gw-one(config)#interface GigabitEthernet0/0.2
+gw-one(config-subif)#description admin
+gw-one(config-subif)#encapsulation dot1Q 2
+gw-one(config-subif)#ip address 192.168.1.1 255.255.255.0
+gw-one(config-subif)#do ping 192.16.1.2
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 192.16.1.2, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 0/0/0 ms
+
+gw-one(config-subif)#
+
+остальное по аналогии
