@@ -1,0 +1,70 @@
+# Как это работает - http://www.youtube.com/watch?v=PCZ_phxlSh4&feature=youtu.be.
+# Нам нужен live образ системы для загрузки на машине которую будем бекапить, для этого понадобится 
+# debootstrap. Установим его.
+sudo apt-get install debootstrap 
+# папочка для нашей rootfs 
+mkdir pxe-iso
+# Устанавливаем в папку базовую систему.
+sudo debootstrap --arch=i386 jessie pxe-iso/ http://mirror.yandex.ru/debian
+# чрутаемся 
+mount -t proc none pxe-iso/proc
+mount -o bind /dev pxe-iso/dev
+mount -t devpts devpts pxe-iso/dev/pts
+mount -t sysfs none pxe-iso/sys
+LANG=C HOME=/root chroot pxe-iso/
+# устанавливаем
+apt-get install openssh-server partimage ntfs-3g linux-image-586 live-boot
+# подчищаем
+rm -rf /tmp/*
+rm -rf /var/tmp/*
+rm -rf /var/cache/*
+# меняем палоль рута
+passwd root
+# перегенерим initrd для live-boot
+update-initramfs -u
+# назначим hostname backuper
+# выходим из чрута
+# размаунчиваемся
+umount pxe-iso/sys/ -l
+umount pxe-iso/proc/ -l
+umount pxe-iso/dev/ -l
+umount pxe-iso/dev/pts -l
+# ставим кабачокфс-тулз
+sudo apt-get install squashfs-tools
+# создаём образ rootfs
+mksquashfs pxe-iso/ pxe.squashfs -noappend
+# копируем что получилось из соответствующих папочек в папку tftp сервера
+tftp
+>>>>
+├── live
+│   ├── filesystem.squashfs
+│   ├── initrd.img
+│   └── vmlinuz
+# В конфиге pxelinux.cfg/default 
+    label BackupRestore
+            MENU LABEL BackupRestore
+            kernel live/vmlinuz
+            append initrd=live/initrd.img boot=live noswap noeject ethdevice=enp0s3 ip=dhcp  vga=788 fetch=tftp://ldap1/live/filesystem.squashfs
+# так же интерфейс может называться eth0
+# На сервере устанавливаем сервер для partimage
+sudo apt-get install partimage-server
+# заводим юзера которым будем логиниться на сервер.
+sudo partimaged-passwd <user> <password> 
+# создаём папку под образа 
+mkdir /partimages
+# даём права на папку юзеру сервера.
+chown partimag: /partimages
+# В инит скрипте нужно поставить опцию -D, а папку под образа прописать в /etc/default/partimag
+
+# для того чтобы достать файлики из образа придётся немного запариться, так как partimage немного умнее dd и образ не просто поток байтов.
+# нужно создать балванку, она должна быть больше или равна размеру файловой системы образа который будет востановлен.
+# иначе partimage будет сигфолтиться.
+dd if=/dev/zero of=dummy.raw bs=1M count=40000
+# "вставить" её в /dev/loopX
+losetup -f --show dummy.raw
+# востановить образ
+partimage restore /dev/loop0 winxp.img
+# после чего маунтим устройство в требуемый  маунтпоинт
+mount -t ntfs-3g /dev/loop0 mountpoint
+# или маунтим болванку 
+mount -o loop -t ntfs-3g dummy.raw mountpoint
