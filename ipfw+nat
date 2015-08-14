@@ -8,9 +8,6 @@ sysctl -p
 #nat
 
 iptables -A POSTROUTING -t nat -j MASQUERADE
-#так как интерфейса два включаем на них nat
-
-
 
 нат работает.
 
