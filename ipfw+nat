@@ -10,9 +10,7 @@ sysctl -p
 iptables -A POSTROUTING -t nat -j MASQUERADE
 #так как интерфейса два включаем на них nat
 
-iptables --append FORWARD --in-interface eth1 -j ACCEPT
-iptables --append FORWARD --in-interface eth2 -j ACCEPT
-iptables -P FORWARD DROP
+
 
 нат работает.
 
