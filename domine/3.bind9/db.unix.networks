@@ -14,3 +14,7 @@ ldap1.unix.networks.  A 172.16.1.1
 host1.unix.networks.  A 172.16.1.10
 host2.unix.networks.  A 172.16.1.11
 host3.unix.networks.  A 172.16.1.39
+_kerberos._udp.UNIX.NETWORKS.     IN SRV 1  0 88  ldap1.unix.networks.
+_kerberos._tcp.UNIX.NETWORKS.     IN SRV 1  0 88  ldap1.unix.networks.
+_kerberos-adm._tcp.UNIX.NETWORKS. IN SRV 1  0 749 ldap1.unix.networks.
+_kpasswd._udp.UNIX.NETWORKS.      IN SRV 1  0 464 ldap1.unix.networks.
