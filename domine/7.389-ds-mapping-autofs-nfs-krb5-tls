@@ -6,9 +6,9 @@ NEEED_SVCGSSD="yes"
 # Оптция для дебага
 RPCSVCGSSDOPTS="-f"
 # Идём в /etc/default/nfs-common, так же обязательно включаем это на клиентской машине.
-NEED_STATD=yes
-NEED_IDMAPD=yes
-NEED_GSSD=yes
+NEED_STATD="yes"
+NEED_IDMAPD="yes"
+NEED_GSSD="yes"
 # Идём в /etc/idmapd.conf, и это тоже должно быть на клиентской машине, иначе у нас не будут мапиться в фс uid gid юзеров.
 Domain = unix.networks
 [Translation]
@@ -128,7 +128,7 @@ See autofs_ldap_auth.conf(5) for more information.
         authrequired="simple"
         user="cn=Directory Manager"
         secret="XXXXXXXXXX"
-        aithtype="GSSAPI"
+        authtype="GSSAPI"
 	clientprinc="nfs/ldap1.unix.networks@UNIX.NETWORKS"
 />
 
