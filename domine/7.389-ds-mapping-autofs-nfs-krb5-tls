@@ -127,7 +127,7 @@ See autofs_ldap_auth.conf(5) for more information.
         user="cn=Directory Manager"
         secret="XXXXXXXXXX"
         aithtype="GSSAPI"
-	clientprinc="nfs/host1.unix.networks@UNIX.NETWORKS"
+	clientprinc="nfs/ldap1.unix.networks@UNIX.NETWORKS"
 />
 
 # Как оказалось, этого мало, пришлось юзать strace, чтобы понять, почему не происходит соединение с ldap.
