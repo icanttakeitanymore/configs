@@ -101,7 +101,7 @@ $ ldapadd -x -W -D  'cn=Directory Manager' -f auto.master.ldif
 # Тут предстоит немного мучений, ну во всяком случае я норм так натерпелся :D
 # Устанавливаем и настраиваем autofs-ldap
 # /etc/auto.master
-/home ldap:ou=auto.home,dc=unix,dc=networks
+/home ldap:ou=auto.master,dc=unix,dc=networks
 # /etc/default/autofs
 MASTER_MAP_NAME="ou=auto.master,dc=unix,dc=networks"
 TIMEOUT=300
