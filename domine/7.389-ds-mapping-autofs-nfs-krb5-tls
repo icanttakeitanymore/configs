@@ -1,15 +1,17 @@
 # пока не доделал.
 # С чего всё же стоит начать. С настройки экспортов и NFS сервера
 # Идём в /etc/default/nfs-kernel-server
-# Нужно включить rpc.svcgssd.
+# Нужно включить rpc.svcgssd на сервере и rpc.gssd на сервере и на клиенте, первый нужен для проверки подлинности цербера,
+# а второй для обеспечения метода аутинтификации SASL GSSAPI.
+# 
 NEEED_SVCGSSD="yes"
 # Оптция для дебага
 RPCSVCGSSDOPTS="-f"
-# Идём в /etc/default/nfs-common, так же обязательно включаем это на клиентской машине.
+# Идём в /etc/default/nfs-common, так же обязательно включаем statd,idmapd,rpc.gssd на клиентской машине.
 NEED_STATD="yes"
 NEED_IDMAPD="yes"
 NEED_GSSD="yes"
-# Идём в /etc/idmapd.conf, и это тоже должно быть на клиентской машине, иначе у нас не будут мапиться в фс uid gid юзеров.
+# Идём в /etc/idmapd.conf,на клиентской машине аналогично, иначе у нас не будут мапиться в фс uid gid юзеров.
 Domain = unix.networks
 [Translation]
 Method=nsswitch
@@ -113,7 +115,7 @@ ENTRY_OBJECT_CLASS="automount"
 MAP_ATTRIBUTE="ou"
 ENTRY_ATTRIBUTE="cn"
 VALUE_ATTRIBUTE="automountInformation"
-# /etc/autofs_ldap_auth.conf
+# /etc/autofs_ldap_auth.conf, не знаю что я делаю с ним не так, но инфу о сертификате и методе SASL он берет из /etc/ldap/ldap.conf
 
 <?xml version="1.0" ?>
 <!--
