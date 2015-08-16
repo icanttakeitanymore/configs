@@ -1,0 +1,41 @@
+; Настройка новой VLAN-сети для коммутатора работающего в прозрачном режиме,
+; или коммутатора с стандартными настройками VTP
+; Этап 1
+;- a) В режиме настройки конфигурации нужно выполнить комманду vlan vlan-id, это 
+; действие переведет пользователя в режим настройки конфигурации vlan сети.
+> Switch(config)#vlan 2
+> Switch(config-vlan)#
+;- b) Воспользуйтесь подкомандой name, для назначения имени VLAN
+; Этам 2
+;- a) Воспользуйтесь командой interface чтобы перейти в режим настройки конфигура
+; ции интерфейса применительно к каждому рассматриваемому интерфейсу, так же можно
+; использовать range.
+> Switch(config)#interface fastEthernet 0/1
+> Switch(config)#interface range fastEthernet 0/1 - 5
+> Switch(config-if-range)#
+;- b) Воспользуйтесь коммандой switchport access vlan vlan-id для указания номера 
+; VLAN-сети, который нужно связать с этим энтерфейсом(или несколькими).
+Switch(config-if-range)#switchport access vlan 2
+;- c) Чтобы запретить создание магистрального соединения в интерфейсе и обиспечить
+; его применение в качестве интерфейса доступа, используем комманду 
+; switchport mode access.
+Switch(config-if-range)#switchport mode access 
+
+; Коммандой show vlan brief можно посмотреть состояние VLAN-сетей и прикрепленных
+; к ним интерфейсов.
+Switch(config)#do show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/6, Fa0/7, Fa0/8, Fa0/9
+                                                Fa0/10, Fa0/11, Fa0/12, Fa0/13
+                                                Fa0/14, Fa0/15, Fa0/16, Fa0/17
+                                                Fa0/18, Fa0/19, Fa0/20, Fa0/21
+                                                Fa0/22, Fa0/23, Fa0/24, Gig1/1
+                                                Gig1/2
+2    VLAN                             active    Fa0/1, Fa0/2, Fa0/3, Fa0/4
+                                                Fa0/5
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active 

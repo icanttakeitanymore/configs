@@ -1,0 +1,82 @@
+# Настройка VLAN-магистралей
+; Коммутаторы Cisco позволяют узказывать тип инкапсуляции в транк 
+; соединении (по протоколу ISL или 802.1Q).
+; Стандартно коммутаторы Cisco согласовывают тип магистрального соединения по прото
+; колу DPT-Dynamic Trunk Protocol.
+; ISL не встречается в современных коммутаторах, например в тех же Catalist 2960 
+; он не поддерживается.
+; Режимы порта
+access - режим доступа, отключает trunk
+trunk - режим магистрального соединения
+dynamic desitable - инициирует передачу сообщений согласования режима канала(trank\access\dot1q\isl).
+dynamic auto - пассивно ожидает получения сообщения для согласования.
+; В коммутаторах 2960 стандартно задан режим dynamic auto, по этому два соединенных
+; коммутатора не начинают согласования
+; Чтобы посмотреть режимы интерфейса нужно выполнить.
+Switch#show interfaces gigabitEthernet 1/1 switchport 
+; Вывод команды.
+Name: Gig1/1
+Switchport: Enabled
+Administrative Mode: dynamic auto
+Operational Mode: down
+Administrative Trunking Encapsulation: dot1q
+Operational Trunking Encapsulation: native
+Negotiation of Trunking: On
+Access Mode VLAN: 1 (default)
+Trunking Native Mode VLAN: 1 (default)
+Voice VLAN: none
+Administrative private-vlan host-association: none
+Administrative private-vlan mapping: none
+Administrative private-vlan trunk native VLAN: none
+Administrative private-vlan trunk encapsulation: dot1q
+Administrative private-vlan trunk normal VLANs: none
+Administrative private-vlan trunk private VLANs: none
+Operational private-vlan: none
+Trunking VLANs Enabled: ALL
+Pruning VLANs Enabled: 2-1001
+Capture Mode Disabled
+Capture VLANs Allowed: ALL
+Protected: false
+Appliance trust: none
+# чтобы посмотреть информацию о магистральных коммандах необходимо выполнить
+Switch#show interfaces trunk
+Switch# 
+# вывод пустой потому что транков нет.
+# меняем административный режим интерфейса
+Switch(config-if)#switchport mode dynamic desirable 
+# смотрим вывод
+Switch#show interfaces gigabitEthernet 1/1 switchport 
+Name: Gig1/1
+Switchport: Enabled
+Administrative Mode: dynamic desirable
+; информация о транковых интерфейсах теперь такая.
+
+Switch#show interfaces trunk 
+Port        Mode         Encapsulation  Status        Native vlan
+Gig1/1      desirable    n-802.1q       trunking      1
+Port        Vlans allowed on trunk
+Gig1/1      1-1005
+Port        Vlans allowed and active in management domain
+Gig1/1      1,2
+Port        Vlans in spanning tree forwarding state and not pruned
+Gig1/1      1,2
+
+; два коммутатора подключены друг к другу через Gig1/1
+                [dynamic----- auto]
+			{Gig1/1} 
+			    |
+			    |
+			    |
+			{Gig1/1}
+		[dinamic-desirable]
+#Управление VLAN-сетями в магистрали.
+
+; Комманда allowed vlan vlan-list предоставляет инженерам механизм с помощью которого они могут выключать
+; использование магистралей теми или иными VLAN-сетями.
+switchport trunk allowed vlan {add|all|except|remove} список-сетй-vlan
+> add - добавляет
+> all - разрешает все с 1 по 4094
+> except - позволяет добалвять к существующему списку диапазон не указанный в комманде. проще говоря говоря вырезает указанный, добавляя все остальные.
+; switchport trunk allowed except 200-300, даст доступ к виланам от 1 до 199 и от 301 до 4094
+> remove - удаляет
+
