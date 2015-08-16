@@ -1,0 +1,322 @@
+# 3 свича 2960
+# 4 станции
+# подсеть 172.16.0.0/24 vlan 1 
+# подсеть 172.16.1.0/24 vlan 50 name A-vlan
+# подсеть 172.16.2.0/24 vlan 51 name B-vlan
+# VTP домен : vtp.domain
+# VTP пароль : vtp.password
+# sw.server - server
+# sw.cli-one, sw.cli-two - свичи доступа, клиенты.
+# настраиваем cdp, имена, домен и пароли.
+
+настройка сервера.
+Switch(config)#hostname sw.server
+sw.server(config)# interface vlan 1
+sw.server(config-if) ip address 172.16.0.1 255.255.255.0
+sw.server(config-if) no shutdown
+sw.server(config)#interface range fastEthernet 0/1-24
+sw.server(config-if-range)#switchport mode access 
+sw.server(config-if)#no cdp enable
+sw.server(config-if)#shutdown
+sw.server(config)#interface range gigabitEthernet 0/1-2
+sw.server(config-if-range)#switchport mode trunk 
+sw.server(config-if-range)#switchport mode dynamic desirable 
+sw.server(config)#vtp domain vtp.domain
+sw.server(config)#vtp password vtp.password
+sw.server(config)#vtp mode server
+
+пойдёт подобный флуд.
+00:39:13 %DTP-5-DOMAINMISMATCH: Unable to perform trunk negotiation on port Gig0/1 because of VTP domain mismatch.
+00:39:22 %DTP-5-DOMAINMISMATCH: Unable to perform trunk negotiation on port Gig0/2 because of VTP domain mismatch.
+настраиваем клиенты
+
+
+
+
+Switch(config)#hostname sw.cli-one
+sw.cli-one(config)#vtp domain vtp.domain
+sw.cli-one(config)#vtp password vtp.password
+sw.cli-one(config)#vtp mode client
+sw.cli-one(config)#interface vlan 1
+sw.cli-one(config-if)#ip address 172.16.0.2 255.255.255.0
+sw.cli-one(config-if)#no shutdown 
+sw.cli-one(config)#interface range fastEthernet 0/1-24
+sw.cli-one(config-if-range)#switchport mode access
+sw.cli-one(config-if-range)#no cdp enable
+sw.cli-one(config-if-range)#shutdown
+sw.cli-one(config)#interface gigabitEthernet 0/2
+sw.cli-one(config-if)#no cdp enable
+sw.cli-one(config-if)#switchport mode access 
+sw.cli-one(config-if)#shutdown
+
+sw.cli-one(config)#do show vtp status
+VTP Version                     : 2
+Configuration Revision          : 1
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 5
+VTP Operating Mode              : Client
+VTP Domain Name                 : vtp.domain
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Disabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0x70 0x42 0xD0 0x6E 0x68 0xE5 0xE7 0xB5 
+Configuration last modified by 172.16.0.1 at 3-1-93 00:28:51
+
+аналогично настраиваем второй клиент. ip 172.16.0.3/24 hostname sw.cli-two
+
+
+# информация с сервера  о топологии сети.
+sw.server#show cdp neighbors detail 
+Device ID: sw.cli-one
+Entry address(es): 
+  IP address : 172.16.0.2
+Platform: cisco 2960, Capabilities: Switch
+Interface: GigabitEthernet0/1, Port ID (outgoing port): GigabitEthernet0/1
+Holdtime: 121
+Version :
+Cisco IOS Software, C2960 Software (C2960-LANBASE-M), Version 12.2(25)FX, RELEASE SOFTWARE (fc1)
+Copyright (c) 1986-2005 by Cisco Systems, Inc.
+Compiled Wed 12-Oct-05 22:05 by pt_team
+advertisement version: 2
+Duplex: full
+---------------------------
+
+Device ID: sw.cli-two
+Entry address(es): 
+  IP address : 172.16.0.3
+Platform: cisco 2960, Capabilities: Switch
+Interface: GigabitEthernet0/2, Port ID (outgoing port): GigabitEthernet0/1
+Holdtime: 153
+Version :
+Cisco IOS Software, C2960 Software (C2960-LANBASE-M), Version 12.2(25)FX, RELEASE SOFTWARE (fc1)
+Copyright (c) 1986-2005 by Cisco Systems, Inc.
+Compiled Wed 12-Oct-05 22:05 by pt_team
+advertisement version: 2
+Duplex: full
+advertisement version: 2
+Duplex: full
+##
+##
+##
+sw.server#show vlan brief 
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/1, Fa0/2, Fa0/3, Fa0/4
+                                                Fa0/5, Fa0/6, Fa0/7, Fa0/8
+                                                Fa0/9, Fa0/10, Fa0/11, Fa0/12
+                                                Fa0/13, Fa0/14, Fa0/15, Fa0/16
+                                                Fa0/17, Fa0/18, Fa0/19, Fa0/20
+                                                Fa0/21, Fa0/22, Fa0/23, Fa0/24
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active  
+
+
+# добавляем сети VLAN на сервере
+
+
+sw.server(config)#vlan 50
+sw.server(config-vlan)#name A-vlan
+sw.server(config-vlan)#vlan
+sw.server(config-vlan)#vlan 51
+sw.server(config-vlan)#name B-vlan
+sw.server(config-vlan)#exit
+
+# получаем.
+sw.server#show vlan  brief 
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/1, Fa0/2, Fa0/3, Fa0/4
+                                                Fa0/5, Fa0/6, Fa0/7, Fa0/8
+                                                Fa0/9, Fa0/10, Fa0/11, Fa0/12
+                                                Fa0/13, Fa0/14, Fa0/15, Fa0/16
+                                                Fa0/17, Fa0/18, Fa0/19, Fa0/20
+                                                Fa0/21, Fa0/22, Fa0/23, Fa0/24
+50   A-vlan                           active    
+51   B-vlan                           active    
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active  
+
+sw.server#show vtp status 
+VTP Version                     : 2
+Configuration Revision          : 5
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 7
+VTP Operating Mode              : Server
+VTP Domain Name                 : vtp.domain
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Disabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0xA2 0xDB 0x80 0xD9 0x0B 0x6A 0x01 0x01 
+Configuration last modified by 172.16.0.1 at 3-1-93 00:53:00
+Local updater ID is 172.16.0.1 (lowest numbered VLAN interface found)
+
+# аналогично на всех клиентах 
+sw.cli-one#show vtp status
+VTP Version                     : 2
+Configuration Revision          : 5
+Maximum VLANs supported locally : 255
+Number of existing VLANs        : 7
+VTP Operating Mode              : Client
+VTP Domain Name                 : vtp.domain
+VTP Pruning Mode                : Disabled
+VTP V2 Mode                     : Disabled
+VTP Traps Generation            : Disabled
+MD5 digest                      : 0xA2 0xDB 0x80 0xD9 0x0B 0x6A 0x01 0x01 
+Configuration last modified by 172.16.0.1 at 3-1-93 00:53:00
+sw.cli-one#show
+sw.cli-one#show vla
+sw.cli-one#show vlan bri
+sw.cli-one#show vlan brief 
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/1, Fa0/2, Fa0/3, Fa0/4
+                                                Fa0/5, Fa0/6, Fa0/7, Fa0/8
+                                                Fa0/9, Fa0/10, Fa0/11, Fa0/12
+                                                Fa0/13, Fa0/14, Fa0/15, Fa0/16
+                                                Fa0/17, Fa0/18, Fa0/19, Fa0/20
+                                                Fa0/21, Fa0/22, Fa0/23, Fa0/24
+                                                Gig0/2
+50   A-vlan                           active    
+51   B-vlan                           active    
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active   
+
+
+
+
+# теперь у нас есть именованные виланы на всех коммутаторах.
+# назначаем портам VLAN-сети.
+
+sw.cli-two(config)#interface range fastEthernet 0/1-5
+sw.cli-two(config-if-range)#switchport access vlan 50
+sw.cli-two(config-if-range)#no shutdown
+
+sw.cli-two(config-if-range)#interface range fastEthernet 0/6-10
+sw.cli-two(config-if-range)#switchport access vlan 51
+sw.cli-two(config-if-range)#no shutdown
+# получаем
+sw.cli-two#show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/11, Fa0/12, Fa0/13, Fa0/14
+                                                Fa0/15, Fa0/16, Fa0/17, Fa0/18
+                                                Fa0/19, Fa0/20, Fa0/21, Fa0/22
+                                                Fa0/23, Fa0/24, Gig0/2
+50   A-vlan                           active    Fa0/1, Fa0/2, Fa0/3, Fa0/4
+                                                Fa0/5
+51   B-vlan                           active    Fa0/6, Fa0/7, Fa0/8, Fa0/9
+                                                Fa0/10
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active   
+
+sw.cli-two#write 
+Building configuration...
+[OK]
+
+sw.cli-one(config)#interface range fastEthernet 0/1-5
+sw.cli-one(config-if-range)#switchport access vlan 50
+sw.cli-one(config-if-range)#no shutdown
+sw.cli-one(config-if-range)#interface range fastEthernet 0/6-10
+sw.cli-one(config-if-range)#switchport access vlan 51
+sw.cli-one(config-if-range)#no shutdown
+
+sw.cli-one#show vlan brief 
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/11, Fa0/12, Fa0/13, Fa0/14
+                                                Fa0/15, Fa0/16, Fa0/17, Fa0/18
+                                                Fa0/19, Fa0/20, Fa0/21, Fa0/22
+                                                Fa0/23, Fa0/24, Gig0/2
+50   A-vlan                           active    Fa0/1, Fa0/2, Fa0/3, Fa0/4
+                                                Fa0/5
+51   B-vlan                           active    Fa0/6, Fa0/7, Fa0/8, Fa0/9
+                                                Fa0/10
+1002 fddi-default                     active    
+1003 token-ring-default               active    
+1004 fddinet-default                  active    
+1005 trnet-default                    active    
+
+sw.cli-one#write
+Building configuration...
+[OK]
+# добавляем port-security по 1 mac на порт.
+
+sw.cli-one(config)#interface range fastEthernet 0/1-24
+sw.cli-one(config-if-range)#switchport port-security
+sw.cli-one(config-if-range)#
+sw.cli-one(config-if-range)#switchport port-security maximum 1
+sw.cli-one(config-if-range)#switchport port-security mac-address sticky
+
+sw.cli-two(config)#interface range fastEthernet 0/1-24
+sw.cli-two(config-if-range)#switchport port-security
+sw.cli-two(config-if-range)#switchport port-security maximum 1
+sw.cli-two(config-if-range)#switchport port-security mac-address sticky
+
+# теперь мы можем увидить такое на каждом из клиентских свичей
+sw.cli-two#show port-security
+Secure Port MaxSecureAddr CurrentAddr SecurityViolation Security Action
+               (Count)       (Count)        (Count)
+--------------------------------------------------------------------
+        Fa0/1        1          0                 0         Shutdown
+        Fa0/2        1          0                 0         Shutdown
+        Fa0/3        1          0                 0         Shutdown
+        Fa0/4        1          0                 0         Shutdown
+        Fa0/5        1          0                 0         Shutdown
+        Fa0/6        1          0                 0         Shutdown
+        Fa0/7        1          0                 0         Shutdown
+        Fa0/8        1          0                 0         Shutdown
+        Fa0/9        1          0                 0         Shutdown
+       Fa0/10        1          0                 0         Shutdown
+       Fa0/11        1          0                 0         Shutdown
+       Fa0/12        1          0                 0         Shutdown
+       Fa0/13        1          0                 0         Shutdown
+       Fa0/14        1          0                 0         Shutdown
+       Fa0/15        1          0                 0         Shutdown
+       Fa0/16        1          0                 0         Shutdown
+       Fa0/17        1          0                 0         Shutdown
+       Fa0/18        1          0                 0         Shutdown
+       Fa0/19        1          0                 0         Shutdown
+       Fa0/20        1          0                 0         Shutdown
+       Fa0/21        1          0                 0         Shutdown
+       Fa0/22        1          0                 0         Shutdown
+       Fa0/23        1          0                 0         Shutdown
+       Fa0/24        1          0                 0         Shutdown
+----------------------------------------------------------------------
+
+проверяем клиенты 
+Pinging 172.16.1.2 with 32 bytes of data:
+
+Reply from 172.16.1.2: bytes=32 time=0ms TTL=128
+Reply from 172.16.1.2: bytes=32 time=0ms TTL=128
+Reply from 172.16.1.2: bytes=32 time=1ms TTL=128
+Reply from 172.16.1.2: bytes=32 time=0ms TTL=128
+
+Ping statistics for 172.16.1.2:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 1ms, Average = 0ms
+
+PC>ping 172.16.2.2 
+
+Pinging 172.16.2.2 with 32 bytes of data:
+
+Reply from 172.16.2.2: bytes=32 time=0ms TTL=128
+Reply from 172.16.2.2: bytes=32 time=1ms TTL=128
+Reply from 172.16.2.2: bytes=32 time=0ms TTL=128
+Reply from 172.16.2.2: bytes=32 time=0ms TTL=128
+
+
+всё, потная настройка свичей окончина. :)
