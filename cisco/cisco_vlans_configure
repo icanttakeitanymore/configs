@@ -318,5 +318,9 @@ Reply from 172.16.2.2: bytes=32 time=1ms TTL=128
 Reply from 172.16.2.2: bytes=32 time=0ms TTL=128
 Reply from 172.16.2.2: bytes=32 time=0ms TTL=128
 
-
+Для того, чтобы наши STP\RSPT пакеты не уходили в клиентские порты, устанавливаем их в portfast и включаем bpduguarg, чтобы порт блокировался при попытках устройства на клиентском интерфейсе стать рутом stp
+sw.cli-one(config)#interface range fastEthernet 0/1-24
+sw.cli-one(config-if-range)#spanning-tree portfast
+sw.cli-one(config-if-range)#spanning-tree bpduguard enable 
+далее на всех коммутаторах по аналогии.
 всё, потная настройка свичей окончина. :)
