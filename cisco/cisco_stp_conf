@@ -1,0 +1,24 @@
+###Управление стоимостью порта и приоритетом моста в протоколе STP
+## STP включен стандартно в коммутаторах cisco.
+## В пакет трейсере этих комманд нет, на реальной железке есть.
+## Выводить все изменения связанные с STP
+Switch#debug stanning-tree events
+## Изменение стоимости экземпляра vlan на интерфейсе
+Switch(config)# int gi0/1
+Switch(config-if)#spaning-tree vlan 3 cost 2
+## Данная комманда приведет к определению стоимости интерфейса в STP, равной 2, для всех vlan-сетей
+Switch(config-if)#spaning-tree cost 2
+## Так можно выбрать первичный и вторичны свичи для корня STP
+## Работает в packet tracer
+sw.server-one(config)#spanning-tree vlan 1,50,51 root primary 
+sw.server-two(config)#spanning-tree vlan 1,50,51 root secondary 
+## При отключении или потере связи с sw.server-one рутом для виланов 1,50-51 станет sw.server-two.
+## Приоритет может быть указан явно командой.
+Switch(config)#stanning-tree vlan "id" priority "значение"
+## Настройка конфигурации режима PortFast и BPDU-Guard.
+# На любом интерфейсе или диапазоне выполняется комманда интерфейса.
+Switch(config-if)#spanning-tree portfast
+# Чтобы запустить службу BPDU-Guard нужно выполнить.
+Switch(config-if)#spanning-tree bpduguard enable
+
+

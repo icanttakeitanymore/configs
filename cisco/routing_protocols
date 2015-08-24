@@ -1,0 +1,147 @@
+# IGP -протоколы.
+# Дистанционно векторные - RIP-1, RIP-2, IGRP
+# Линк стейт - OSPF, IS-IS
+# Сбалансированные гибридные - EIGRP
+Метрики:
+Дистанционно векторные - hop count - счётчик транзитных узлов.
+Линк стейт - bandwith - пропускная способность канала.
+# Классовые и бесклассовые протоколы маршрутизации.
+Функция 		Бессклассовый протокол	Классовый протокол
+
+Поддерживает маски VLSM		Да			Нет
+
+Пересылает маску подсети
+в аннонсах маршрутизации 	Да			Нет
+
+Поддерживает суммирование
+маршрутов вручную 	  	Да			Нет
+##
+Характеристика 			RIP-1	RIP-2	EIGRP 	OSPF	IS-IS
+
+Бессклассовый			нет	да	да	да	да
+
+Поддерживает маски VLSM		нет	да	да	да	да
+
+Пересылает маску в анонсах	нет	да	да	да 	да
+маршрутов
+
+Дистанционно-векторный		да	да	нет~ 	нет	нет
+
+Линк-стейт 			нет	нет	нет	да	да
+; Протокол EIGRP относят к классу сбалансированных гибридных протоколов, у которых есть как признаки дистанционно векторных,
+; так и прооколов линк стейт. 
+Поддержка авто сумминования 	нет	да	да	нет	нет
+
+Поддерживает суммирование
+вручную				нет 	да	да	да	да
+
+Проприетарный			нет	нет	да	нет	нет
+
+Обновление таблицы маршрутиза	нет	да	да	да	-
+ции прересылаются бродкастом
+
+Поддерживается аутентификация 	нет	да	да	да	да
+
+Конвергенция			Медлен	Медлен	Оч.быст	Быстр	Быстр
+
+Конфигурирование RIP-2
+Запустить протокол RIP-2 очень просто.
+Нужно выполнить три обязательные команды.
+1.Войти в режим конфигурации протокола маршрутизации. 
+router-A(config)#router rip 
+2.Выбрать версию 
+router-A(config-router)#version 2
+3. Ввести одну или больше комманд network 'адрес_сети',
+чтобы включить протокол RIP на правильных интерфейсах.
+4. Для того чтобы отключить RIP на ненужном интерфейсе выполняем команду
+passive-interface тип номер.
+
+
+Пример 
+router-A(config)#router rip
+router-A(config-router)#version 2
+router-A(config-router)#network 10.0.0.0
+router-A(config-router)#network 172.16.0.0
+router-A(config-router)#no auto-summary 
+router-A(config-router)#passive-interface gigabitEthernet 0/0 \; фреймы в локалку.
+
+router-A(config-router)#passive-interface gigabitEthernet 0/0.50 \; с виланами вот так.
+router-A(config-router)#passive-interface gigabitEthernet 0/0.51
+
+Пакет будет нести вот такую информацию
+
+
+1. The device builds a periodic RIP update packet to send out to GigabitEthernet0/0.51.
+2. The device adds an update route 10.0.0.0/29 to the RIP packet.
+3. The device adds an update route 172.16.0.0/16 to the RIP packet.
+4. The device adds an update route 172.16.1.0/24 to the RIP packet.
+на 209.0.0.9:520
+
+
+router-A#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+ 
+GigabitEthernet0/0     unassigned      YES unset  up                    up
+ 
+GigabitEthernet0/0.50  172.16.1.1      YES manual up                    up
+ 
+GigabitEthernet0/0.51  172.16.2.1      YES manual up                    up
+ 
+show ip route rip покажет таблицу маршрутижации сгенерированную rip.
+show ip protocols выводит информацио о конфигурации протокола RIP, адреса соседних RIP-устройств
+
+Routing Protocol is "rip"
+Sending updates every 30 seconds, next due in 13 seconds
+Invalid after 180 seconds, hold down 180, flushed after 240
+Outgoing update filter list for all interfaces is not set
+Incoming update filter list for all interfaces is not set
+Redistributing: rip
+Default version control: send version 2, receive 2
+  Interface             Send  Recv  Triggered RIP  Key-chain
+  GigabitEthernet0/2    2     2     
+Automatic network summarization is not in effect
+Maximum path: 4
+Routing for Networks:
+	10.0.0.0
+	172.16.0.0
+Passive Interface(s):
+	GigabitEthernet0/0
+	GigabitEthernet0/0.50
+	GigabitEthernet0/0.51
+Routing Information Sources:
+	Gateway         Distance      Last Update
+	10.0.0.3             120      00:00:01
+	10.0.0.2             120      00:00:15
+Distance: (default is 120)
+
+# Административное расстояние(Distance)
+
+
+Приоритеты протоколов
+Напрямую подключенные сети	0
+Статические маршруты		1
+EIGRP				90
+IGRP				100
+OSPF				110
+IS-IS				115
+RIP				120
+Неизвестный			255
+
+присвоение Distance
+ip route 10.1.1.0 255.255.255.0 10.2.2.2 150
+дебаг протокола rip
+debug ip rip 
+router-A#debug ip rip 
+RIP protocol debugging is on
+router-A#RIP: received v2 update from 10.0.0.3 on GigabitEthernet0/2
+      172.16.0.0/16 via 0.0.0.0 in 1 hops
+RIP: received v2 update from 10.0.0.2 on GigabitEthernet0/2
+      172.16.0.0/16 via 0.0.0.0 in 1 hops
+RIP: received v2 update from 10.0.0.3 on GigabitEthernet0/2
+      172.16.0.0/16 via 0.0.0.0 in 1 hops
+RIP: sending  v2 update to 224.0.0.9 via GigabitEthernet0/2 (10.0.0.1)
+RIP: build update entries
+      172.16.1.0/24 via 0.0.0.0, metric 1, tag 0
+      172.16.2.0/24 via 0.0.0.0, metric 1, tag 0
+
+router-A#undebug all

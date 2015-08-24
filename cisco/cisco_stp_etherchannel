@@ -1,0 +1,10 @@
+# Агрегирование
+# После того как в конфигурации выполнена настройка пары каналов ethernet в виде канала EtherChannel, в протоколе STP каждый канал EtherChannel
+рассматривается как единое соединение. Иными словами, для того чтобы появились основания к проведению согласования по протоколу STP,
+должен произойти отказ обоих интерфейсов связывающих два коммутатора.
+Switch(config)#interface range gigabitEthernet 0/1-2
+Switch(config-if-range)#channel-group 1 mode on
+Switch(config-if-range)#switchport mode trunk
+# Один канал etherchannel позволяет объеденить до 8 портов коммутатора.
+# Для вывода информации о канале eherchannel 1 выполните.
+Switch#show etherchannel 1 summary.
