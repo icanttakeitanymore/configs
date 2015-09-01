@@ -1,5 +1,0 @@
-     permit tcp 172.16.0.0 0.0.255.255 any eq www 
- permit tcp 192.168.0.0 0.0.255.255 any eq www 
- permit ip 172.16.0.0 0.0.255.255 any 
- permit ip 192.168.0.0 0.0.0.255 any
- permit udp 192.168.0.0 0.0.255.255 any eq domain 
