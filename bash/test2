@@ -22,7 +22,7 @@ for i in $(grep wlan0 /proc/net/if_inet6  | awk '{ print $3 } ');
 done
 }
 #<-Выбо опций->#
-while getopts ":f:s:" optname
+while getopts ":f:s:h:" optname
   do
     case "$optname" in
       "f") iface=$OPTARG
@@ -31,8 +31,8 @@ while getopts ":f:s:" optname
       "s") iface=$OPTARG
          select_interface_v6 >&2
         ;;
-      ":")
-        echo "No argument value for option $OPTARG"
+      "h")
+        echo "help is comming:)"
         ;;
       *)
       # Соответствий не найдено
