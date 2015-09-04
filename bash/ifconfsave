@@ -1,0 +1,129 @@
+#!/bin/bash
+###########################################
+#<-запись конфигурации интерфейса в файл->#
+###########################################
+########
+# IPv4 #
+########
+function select_interface_v4() 
+{
+    echo 'auto' $iface
+    echo 'iface' $iface 'inet static'
+    addrv4=$(ifconfig $iface | grep 'inet addr' | awk '{ print $2 }' | sed 's/addr:/address /g') ; echo  -e ' \t ' $addrv4
+    bcastv4=$(ifconfig $iface | grep 'inet addr' | awk '{ print $3 }' | sed 's/Bcast:/broadcast /g') ; echo  -e ' \t ' $bcastv4
+    maskv4=$(ifconfig $iface | grep 'Mask' | awk '{ print $4 }' | sed 's/Mask:/netmask /g') ; echo -e ' \t ' $maskv4
+}
+##############
+# IPv4 vlans #
+##############
+function select_interface_v4_vlan()
+{
+    echo 'auto' $iface
+    echo 'iface' $iface 'inet static'
+    addrv4=$(ifconfig $iface | grep 'inet addr' | awk '{ print $2 }' | sed 's/addr:/address /g') ; echo  -e ' \t ' $addrv4
+    bcastv4=$(ifconfig $iface | grep 'inet addr' | awk '{ print $3 }' | sed 's/Bcast:/broadcast /g') ; echo  -e ' \t ' $bcastv4
+    maskv4=$(ifconfig $iface | grep 'Mask' | awk '{ print $4 }' | sed 's/Mask:/netmask /g') ; echo -e ' \t ' $maskv4
+    ipv4vl=$(grep Device /proc/net/vlan/$iface | sed 's/Device: /vlan_raw_device /g') ; echo -e ' \t ' $ipv4vl
+}
+########
+# IPv6 #
+########
+function select_interface_v6() 
+{
+    echo 'auto' $iface
+    echo 'iface' $iface 'inet6 static'
+#>адреса<#
+for i in $(grep $iface /proc/net/if_inet6 | cut --output-delimiter=":" --characters=1-4,5-8,9-12,13-16,17-20,21-24,25-28,29-32);
+  do echo -e ' \t ' address $i; 
+done
+# маски #
+for i in $(grep $iface /proc/net/if_inet6  | awk '{ print $3 } '); 
+ do echo -e ' \t ' "netmask" $((16#$i)); 
+done
+}
+
+
+##############
+# IPv6 vlans #
+##############
+function select_interface_v6_vlan() 
+{
+    echo 'iface' $iface 'inet6 static'
+#>адреса<#
+for i in $(grep $iface /proc/net/if_inet6 | cut --output-delimiter=":" --characters=1-4,5-8,9-12,13-16,17-20,21-24,25-28,29-32);
+  do echo -e ' \t ' address $i; 
+done
+#>маски<#
+for i in $(grep $iface /proc/net/if_inet6  | awk '{ print $3 } '); 
+  do echo -e ' \t ' netmask $((16#$i)); 
+done
+    ipv6vl=$(grep Device /proc/net/vlan/$iface | sed 's/Device: /vlan_raw_device /g') ; echo -e ' \t ' $ipv6vl
+}
+
+ 
+################
+# Выбор опций  #
+################
+while getopts ":f:s:h:" optname
+  do
+    case "$optname" in
+      
+      "f") 
+      
+          ########
+	  # IPv4 #
+	  ########
+          iface=$OPTARG
+          I=`echo $iface | egrep '\.|vlan'`
+          
+          if [ -n "$I" ]
+            
+            then  
+         
+	  select_interface_v4_vlan >&2
+            
+            else    
+         
+	  select_interface_v4 >&2
+         
+         fi
+        ;;
+      
+      "s") 
+          
+          ########
+	  # IPv6 #
+	  ########
+          iface=$OPTARG
+	  I=`echo $iface | egrep '\.|vlan'`
+       
+	  if [ -n "$I" ]
+        
+            then
+	  
+	  select_interface_v6_vlan >&2
+          
+	    else
+	  
+	  select_interface_v6 >&2
+        
+	  fi
+        ;;
+       h) 
+	    ######
+	    #help#
+	    ######
+        echo "Флаг -s для ipv6 -f для ipv4"
+	echo ""ifsave -s wlan0" > wlan0.conf"
+        ;;
+	    
+       *)
+      ##########################
+      # Соответствий не найдено#
+      ##########################
+        echo "введите -h для справки"
+        ;;
+    esac
+  done
+
+
