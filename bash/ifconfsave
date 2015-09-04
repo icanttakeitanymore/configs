@@ -123,10 +123,7 @@ function print_help()
   echo "       netmask 64"
   echo "       bridge_stp yes"
 } 
-function null()
-{ 
- echo "введите -h для справки"
-}
+
 ################
 # Выбор опций  #
 ################
