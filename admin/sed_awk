@@ -1,0 +1,20 @@
+## sed как grep
+sed -n /root/p /etc/passwd
+## sed как head
+seed 10q /etc/passwd
+## sed закаментить строку, скопировать бекап
+sed -i.orig s/^alias/#alias/ file
+## 
+sed -i.orig /^alias/s/^/# file
+## sed вывести только раскаменченые строки
+sed /^#/d /etc/sysctl.conf
+## sed поиск замена
+sed -i.orig /PATH=/s:@:/usr/local/bin:@ .profile
+## sed несколько переменных
+sed -e /^#/d -e '/^$/d' /etc/sysctl.conf
+## awk как grep
+awk /^root/{print} file
+## awk head
+awk '{print}NR==10{exit}' file
+## первый столбец совпавший с root
+awk -F: '$1=="root"{print}' file

@@ -1,0 +1,19 @@
+# Стандартное значение
+options {
+	rrset-order {
+		order random;
+	};
+};
+# Фиксированый
+options {
+	rrset-order {
+		class IN type A name "example.com" order fixed;
+	};
+};
+# Цикл (Round robin)
+options {
+	rrset-order {
+		class IN type ANY name "*" order cyclic;
+	};
+};
+

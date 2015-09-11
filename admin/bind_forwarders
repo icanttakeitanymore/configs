@@ -1,0 +1,13 @@
+####### opt
+
+options {
+	forwarders { IP;IP;
+		     IP;IP; };
+	forward only;
+};
+
+####### zone
+zone "forward.com" {
+	type forward;
+	forwarders { IP;IP; };
+};
