@@ -6,7 +6,7 @@ $TTL 86400
                                                 1h ) ; negative ttl
                            
 
-  NS ns1.unix.networks.
+IN  NS ns1.unix.networks.
 
 1 PTR ldap1.unix.networks.
 10 PTR host1.unix.networks.
