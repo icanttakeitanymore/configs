@@ -20,3 +20,12 @@ cat /proc/net/ip_conntrack
 :msg, contains, "IPTABLES " -/var/log/iptables.log
 & ~
 ##
+debian:~/gits/configs$ cat /etc/logrotate.d/iptables 
+/var/log/iptables.log {
+    daily
+    rotate 30
+    compress
+    missingok
+    notifempty
+    sharedscripts
+}
