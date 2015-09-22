@@ -1,0 +1,58 @@
+###Сообщения RS/RA
+
+RS -  Router Solicitation : сообщение запроса.
+RA -  Router Advertisement : Сообщение анонсирования
+
+Наиболие используемые канальные локальные адреса многоадресной рассылки
+
+Использование адреса                     Адрес в протоколе IPv6 
+Все узлы					FF02::1
+Все маршрутизаторы 				FF02::2
+Сообщения протокола OSPF 			FF02::5,FF02::6
+Сообщения протокола RIP				FF02::9
+Сообщения EIGRP					FF02::A
+DHCP relay 					FF02:1:2
+localloop					::/1
+Подсеть для демонстрации			2001:db8::/32
+
+Глобальный одноадресный 2000::/3
+Уникальный локальный    FD00::/8 
+Канальный локальный     FE80::/10 FE8-FEB
+Эникаст                 FF02::/16
+
+
+OpenBSD eui64
+
+ifconfig em0 2001:db8:10::/64 eui64
+OpenBSD  vlans && routing
+forwarding
+/etc/sysctl.conf
+net.inet6.ip6.forwarding=1
+vlans
+ifconfig vlan10 create
+ifconfig vlan20 create
+ifconfig vlan10 vlandev em0
+ifconfig vlan20 vlandev em0
+ifconfig vlan10 inet6 2001:db8:10::1/64
+ifconfig vlan20 inet6 2001:db8:20::1/64
+OpenBSD isc-dhcp-server
+/etc/isc-dhcpd.conf
+max-lease-time 7200;
+log-facility local7;
+subnet6 2001:db8:10::/64 {
+	range6 2001:db8:10::1111 2001:db8:10::ffff;
+	
+	option dhcp6.name-servers 2001:db8:10::1;
+	option dhcp6.domain-search "unix.networks";
+}
+subnet6 2001:db8:20::/64 {
+        range6 2001:db8:20::1111 2001:db8:20::ffff;
+
+        option dhcp6.name-servers 2001:db8:20::1;  
+        option dhcp6.domain-search "unix.networks";
+}
+
+OpenBSD isc-dhcp-server start
+/usr/local/sbin/dhcpd -6 -d -cf /etc/isc-dhcpd.conf em10
+OpenBSD dhcpv6 relay 
+/usr/local/sbin/dhcprelay -6 -d -I -l vlan20 -u vlan10

@@ -1,0 +1,14 @@
+Изменение уровня отладки
+с помощью управляющих сообщений
+# rndc trace 3
+# rndc notrace
+
+logging {
+	category queries {
+	default_debug;
+	};
+};
+
+весь дамп rndc dumpdb –all.
+выводить запросы в сислог rndc querylog
+повторить трансфер rndc retransfer

@@ -1,0 +1,58 @@
+## Глобальная конфигурация разрешения запросов
+options {
+	allow-query { список адресов;};
+};
+## ACL
+
+acl "HNET" { 15/8; };
+zone "hp.com" {
+	type slave;
+	file "bak.hp.com";
+	masters { 15.255.152.2; };
+	allow-query { "HNET"; };
+};
+## Трансфер по IP
+
+
+zone "ok.edu" {
+	type master;
+	file "db.ok.edu";
+	allow-transfer  { 192.249.249.1; 192.253.253.1; 192.249.249.9;
+			192.253.253.9; };
+};
+
+## Запрет трансфера на слейве.
+zone "ok.edu" {
+	type slave;
+	masters { 192.249.249.3; };
+	file "bak.ok.edu";
+	allow-transfer { none; };
+};
+
+## По ключу
+## На мастере
+key ns1-ns2. {
+	algorithm hmaс-md5;
+	secret "key128bit=";
+};
+zone "one.edu" {
+	type master;
+	file "db.one.edu";
+	allow-transfer { key one-two.; };
+};
+
+## На слейве
+key ns1-ns2. {
+	algorithm hmac-md5;
+	secret "key128bit=";
+};
+server 192.249.249.3 {
+	keys { ns1-ns2.; }; // подписывать все запросы
+				// к 192.249.249.3 этим ключом
+};
+zone "ok.edu" {
+	type slave;
+	masters { 192.249.249.3; };
+	file "bak.ok.edu";
+};
+

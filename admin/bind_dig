@@ -1,0 +1,10 @@
+## Флаги
+-x IP = выдаст реверсную зону.
+-p порт = указать порт
++norec = выключить рекурсию
++vc = посылать TCP запросы
+axfr = показать трансфер зоны. отключается опцией allow-transfer {};
+
+dig @ns1.yandex.ru hostname.bind any ch | grep TXT
+dig -t txt -c chaos version.bind @ns1.yandex.ru
+dig ya.ru +trace 

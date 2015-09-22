@@ -1,0 +1,6 @@
+# чтобы посмотреть версию сервера dig @dns txt chaos version.bind.
+# Изменить версию 
+options {
+	version none; или "string"
+};
+

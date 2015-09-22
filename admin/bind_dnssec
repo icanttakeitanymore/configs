@@ -1,0 +1,33 @@
+@ ZSK -zone signing keys
+#
+@ KSK - key signing keys
+KSK gen
+# dnssec-keygen -f KSK -a RSASHA1 -b 512 -n ZONE example.com
+ZSK
+# dnssec-keygen -a RSASHA1 -b 512 -n ZONE example.com
+Подписание
+# cat "$INCLUDE Kexample.com.+005+15480.key" >> db.example.com
+# cat "$INCLUDE Kexample.com.+005+03674.key" >> db.example.com
+# dnssec-signzone -o example.com. db.example.com
+Включить опцию dnssec
+options { 
+	dnssec-enable yes;
+};
+Включть зону с новым файлом сгенерированным dnssec-signzone
+zone "example.com" {
+	type master;
+	file "db.movie.edu.signed";
+};
+
+## ключи dnssec-signzone
+-i длина цикла повторной подписи.
+-f позволяет указатьимя файла в который происходит запись подписанной зоны
+-k указываетключ, которым осуществояется подписывание ключей.
+
+обновление через nsupdate
+#nsupdate
+> update add foo.example.com 3600 IN A 1.2.3.4
+срок действия в днях
+options { 
+	sig-validity-interval 7;
+};

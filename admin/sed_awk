@@ -8,6 +8,7 @@ sed -i.orig s/^alias/#alias/ file
 sed -i.orig /^alias/s/^/# file
 ## sed вывести только раскаменченые строки
 sed /^#/d /etc/sysctl.conf
+sed -e /^#/d -e '/^\t#/d' /etc/nginx/sites-available/default 
 ## sed поиск замена
 sed -i.orig /PATH=/s:@:/usr/local/bin:@ .profile
 ## sed несколько переменных
@@ -18,3 +19,4 @@ awk /^root/{print} file
 awk '{print}NR==10{exit}' file
 ## первый столбец совпавший с root
 awk -F: '$1=="root"{print}' file
+#
