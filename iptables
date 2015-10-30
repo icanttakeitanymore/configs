@@ -1,0 +1,22 @@
+# посмотреть текущие соединения
+cat /proc/net/ip_conntrack
+сброс соединений пакет conntracrack, conntracrack -L
+#########
+##Лог невалидных пакетов
+-A INPUT -m state --state INVALID -j LOG --log-prefix "IPTABLES invalid:"
+##Сбрасываем все пакеты не связанные с установлеными соединениями, а так же невалидные пакеты.
+-A INPUT -m state --state INVALID -j DROP
+##Ассептим локаллинк, для того чтобы локальные процессы могли устанавливать соединения.
+-A INPUT -i lo -j ACCEPT
+## Логируем попытки соединений
+-A INPUT -m state --state NEW -j LOG --log-prefix "IPTABLES new:"
+##Ассептим соединения на инпат, которые уже установлены.
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+## Сбрасываем на инпат все попытки соединиться по TCP.
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j DROP
+-A INPUT -m state --state NEW -j DROP
+##
+Логирование в отдельный файл rsyslogd
+:msg, contains, "IPTABLES " -/var/log/iptables.log
+& ~
+##
