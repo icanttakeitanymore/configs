@@ -63,7 +63,7 @@ done < $PWD/out.csv | mysql -u$USER -p$PASSWORD db$DATE;
 }
 
 queryes(){
-rm -F $PWD/*.csv
+rm -f $PWD/*.csv
 mysql -u$USER -p$PASSWORD db$DATE <<EOF
 SELECT * FROM output WHERE kolvo between 1 and 5 INTO OUTFILE '$PWD/out1-5.csv' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
 EOF
