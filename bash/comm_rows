@@ -2,7 +2,7 @@
 #Перебор по содержимому второго столбца 
 FILE=$1 
 FILE2=$2
-COMM=$(cat $FILE 2> /dev/null | awk -F", " '{print $2}' |grep "\<[А-Я].*[Щ]\>")
+COMM=$(cat $FILE 2> /dev/null | awk -F", " '{print $2}' |grep "\<[А-Я].*Щ\>")
 if [ -f $1 ] && [ -f $2 ]  
         then for f in $COMM; do grep  $f $FILE2; done
         else echo "Какая-то из переменных не является файлом"
