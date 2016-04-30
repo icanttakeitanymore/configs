@@ -1,6 +1,5 @@
 #include <iostream>
 #include <stdio.h>
-#include <vector>
 using namespace std;
 // // // 
 // 
@@ -40,7 +39,6 @@ Token_stream ts; //
 // // // 
 
 //Получение переменных с ввода и составление лексем.
-Token get_token(); // парсит cin возвращая данные для t 
 //Выражение сложения и вычитания.
 double expression_step3(); // назначет left из term_step2() 
                            // а term из primary_step1()
@@ -48,7 +46,7 @@ double expression_step3(); // назначет left из term_step2()
 double term_step2();       // возвращает в expression_step3 left
                            // который берет из primary_step1
 //Работа с числами и скобками.
-double primary_step1();    // получет left из get_token()
+double primary_step1();    // получет left из get() токенстрима
 
 // // //----------------------------------------
 // Основная программа.
