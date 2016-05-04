@@ -23,7 +23,7 @@ def select_governors():
     #Вывод на экран.
     for i in enumerate(scaling_available_governors):
         print(i)
-    #Получение количества процессоров.
+    #Получение количества ядер.
     for line in open('/proc/cpuinfo').readlines():
         if line.find('cpu cores') == 0:
             cpu_cores = line.rstrip().rsplit(":")
