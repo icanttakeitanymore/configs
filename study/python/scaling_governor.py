@@ -12,7 +12,7 @@
 # Введите номер требуемого режима ::0
 # Ядру  0 установлен режим performance
 # Ядру  1 установлен режим performance
-# root@notebook:/home/boris/study/python# 
+# root@notebook:/home/boris/study/python#
 
 # Выбор режима.
 def select_governors():
@@ -23,7 +23,7 @@ def select_governors():
     #Вывод на экран.
     for i in enumerate(scaling_available_governors):
         print(i)
-    #Получение количества ядер.
+    #Получение количества процессоров.
     for line in open('/proc/cpuinfo').readlines():
         if line.find('cpu cores') == 0:
             cpu_cores = line.rstrip().rsplit(":")
@@ -34,7 +34,7 @@ def select_governors():
     governor_num = int(input("Введите номер требуемого режима ::"))
     governor = scaling_available_governors[governor_num]
 
-
+    
 # Установка значений 
 def scaling_write(governor):
     """Функция установки значения скейлинга"""
@@ -46,6 +46,23 @@ def scaling_write(governor):
         print("Ядру ", i , "установлен режим", governor)
 
 
-# Исполнение.                   
-select_governors()
-scaling_write(governor)
+
+                   
+                   
+# Ошибки. 
+def run():
+    try:
+        select_governors()
+    except ValueError:
+        print("Не верное значение номера режима")
+    except IndexError:
+        print("Значение не входит номера допустимых режимов")
+    try:
+        scaling_write(governor)
+    except NameError:
+        print("Исполнение не возможно")
+    except PermissionError:
+        print("Нет доступа к /sys")
+        
+# Запуск.
+run()
