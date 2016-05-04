@@ -4,6 +4,15 @@
 # governor - Режим.
 # scaling_available_governors - Файл в котором хранятся доступные режимы.
 # scaling_governor_working - Файл текущего режима.
+#
+# root@notebook:/home/boris/study/python# ./cpufreq.py 
+# (0, 'performance')
+# (1, 'powersave')
+# Ядер у процессора : 2
+# Введите номер требуемого режима ::0
+# Ядру  0 установлен режим performance
+# Ядру  1 установлен режим performance
+# root@notebook:/home/boris/study/python# 
 
 # Выбор режима.
 def select_governors():
