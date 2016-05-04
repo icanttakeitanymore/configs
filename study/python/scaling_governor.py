@@ -54,15 +54,15 @@ def run():
     try:
         select_governors()
     except ValueError:
-        print("Не верное значение номера режима")
+        print("Ошибка в select_governors(): Не верное значение номера режима")
     except IndexError:
-        print("Значение не входит номера допустимых режимов")
+        print("Ошибка в select_governors(): Значение не входит номера допустимых режимов")
     try:
         scaling_write(governor)
     except NameError:
-        print("Исполнение не возможно")
+        print("Ошибка в scaling_write(governor): Исполнение не возможно")
     except PermissionError:
-        print("Нет доступа к /sys")
+        print("Ошибка в scaling_write(governor): Нет доступа к /sys")
         
 # Запуск.
 run()
