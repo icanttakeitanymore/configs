@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+# Переключение режимов скейлинга частоты процессора.
+#
+# governor - Режим.
+# scaling_available_governors - Файл в котором хранятся доступные режимы.
+# scaling_governor_working - Файл текущего режима.
+
+# Выбор режима.
+def select_governors():
+    """Функция выбора режима"""
+    global governor,cpu_cores_val
+    #Получение доступных режимов.
+    scaling_available_governors = str(open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors').readline()).rstrip().rsplit(" ")
+    #Вывод на экран.
+    for i in enumerate(scaling_available_governors):
+        print(i)
+    #Получение количества процессоров.
+    for line in open('/proc/cpuinfo').readlines():
+        if line.find('cpu cores') == 0:
+            cpu_cores = line.rstrip().rsplit(":")
+            cpu_cores_val = int(cpu_cores[1].replace(" ",""))
+            break
+    print("Ядер у процессора :", cpu_cores_val)
+    #Выбор нужного режима.
+    governor_num = int(input("Введите номер требуемого режима ::"))
+    governor = scaling_available_governors[governor_num]
+
+
+# Установка значений 
+def scaling_write(governor):
+    """Функция установки значения скейлинга"""
+    for i in range(cpu_cores_val):
+        scaling_governor_working = '/sys/devices/system/cpu/cpu%d/cpufreq/scaling_governor' % i  # Файлы для ядер в разных каталогах.
+        action_scaling_governors = open(scaling_governor_working, 'w')
+        action_scaling_governors.write(governor)
+        action_scaling_governors.close()
+        print("Ядру ", i , "установлен режим", governor)
+
+
+# Исполнение.                   
+select_governors()
+scaling_write(governor)
