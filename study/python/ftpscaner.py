@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-# простой сканер публичных фтп.
+# Сканер публичных фтп.
 import subprocess
 import ftplib
+import sys
 
 nmap = '/usr/bin/nmap'    # Бинарник nmap.
 nmap_arg1= '-sP'          # Проверка пингом.
 nmap_arg2= '-p 21'        # Порт 21.
-ip = '213.180.204.0/24'   # Сканируемая сеть.
+ip = str(sys.argv[1]) + '/24'   # Сканируемая сеть.
 
 servers_found_nmap = []   # Лист полученый с stdout nmap.
 servers_found_instr = []  # Лист в котором происходит парсинг.
 servers_found_online = [] # Лист хостов находящихся в сети.
 servers_with_ftp = []     # Лист хостов с открытым портом.
 servers_with_anon = []    # Логин анонимусом возвращает 230.
+
+print("Сканируемая сеть: ", ip)
 
 
 def network_scan():
@@ -51,18 +54,20 @@ def converter():
     servers_found_instr = str(servers_found_instr).replace(" ","")
     servers_found_online = list(servers_found_instr.split(','))
 
+    if servers_found_online == [""]:
+        print("Нет онлайн хостов")
+        sys.exit()
+    
     for i in servers_found_online:
         print("Онлайн :", i)
                  
         
-
-
 def port_scaner():
     """Функция сканирования порта в аргументе nmap_arg2.
     Помещаем хосты с открытым портом в servers_with_ftp.
     """
     length_servers_found_online = len(servers_found_online)
-    
+    print("Хостов обнаружено: ",length_servers_found_online)
     for i in servers_found_online:
         progress = servers_found_online.index(i)/(length_servers_found_online/100)
         print(i, int(progress), "%")
@@ -97,24 +102,27 @@ def try_to_connect():
             continue
         except ftplib.error_perm as e:
             print(e)
-            if e == "530 Login incorrect.":
-                continue
+            continue
 
-
-# Run
+# Runc
 
 network_scan()
 converter()
+
+
 port_scaner()
 
 for i in servers_with_ftp:
-    print(i, ' Открыт')
-
+    print(i, " Открыт")
+    
 try_to_connect()
 
-output = open('output.txt', 'w')
-output.write(str(servers_with_anon))
-output.close()
+if servers_with_ftp == []:
+    print("В этом диапазоне нет открытых фтп")
+else:
+    output = open('output.txt', 'w')
+    output.write(str(servers_with_anon))
+    output.close()
 
 for i in servers_with_anon:
-    print("Анонимное соединение: ", i)
+    print(i, " Анонимное соединение")
