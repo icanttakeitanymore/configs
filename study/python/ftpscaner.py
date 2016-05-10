@@ -15,7 +15,7 @@ servers_found_online = [] # Лист хостов находящихся в се
 servers_with_ftp = []     # Лист хостов с открытым портом.
 servers_with_anon = []    # Логин анонимусом возвращает 230.
 
-print("Сканируемая сеть: ", ip)
+print("[ Сканируемая сеть: ", ip,"]")
 
 
 def network_scan():
@@ -24,7 +24,7 @@ def network_scan():
     получает выдачу с stdout программы nmap, выбирается 
     столбец с ip в список servers_found_instr.
     """
-    print("Поиск онлайн хостов.")
+    print("[ Поиск онлайн хостов. ]")
     job = subprocess.Popen([nmap,nmap_arg1,ip],stdout=subprocess.PIPE)
     out = job.communicate()
     
@@ -58,19 +58,22 @@ def converter():
         print("Нет онлайн хостов")
         sys.exit()
     
-    for i in servers_found_online:
-        print("Онлайн :", i)
+    print("Сервера онлайн: ", servers_found_online)
                  
         
 def port_scaner():
     """Функция сканирования порта в аргументе nmap_arg2.
     Помещаем хосты с открытым портом в servers_with_ftp.
     """
+    print("\n[ Полверка 21 порта началась. ]")
     length_servers_found_online = len(servers_found_online)
-    print("Хостов обнаружено: ",length_servers_found_online)
+    print("[ Хостов обнаружено: ",length_servers_found_online,"]")
     for i in servers_found_online:
-        progress = servers_found_online.index(i)/(length_servers_found_online/100)
-        print(i, int(progress), "%")
+        progress = servers_found_online.index(i)/(length_servers_found_online/101)
+        print("[", '-'*int(progress), " "*int(101 - int(progress)), int(progress),"%","]",i, end='')
+        print('\r' * 110, end='')
+        if int(progress) == 100:
+            print("\n[ Полверка 21 порта окончена. ]")
         job = subprocess.Popen([nmap, nmap_arg2, i],stdout=subprocess.PIPE)
         out = job.communicate()
         if str(out).find('STATE') != -1:    # Ищем STATE в выдаче nmap
