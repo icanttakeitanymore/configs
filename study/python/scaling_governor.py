@@ -65,9 +65,9 @@ def run():
         print("Ошибка в scaling_write(governor): Нет доступа к /sys")
         
 # Запуск.
-if __name == '__main__':
-    if os.getuid != 0:
+if __name__ == '__main__':
+    if os.getuid() != 0:
         print("Необходимо выполнять с правами суперпользователя")
         sys.exit()
-    else
+    else:
         run()
