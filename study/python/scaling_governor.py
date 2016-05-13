@@ -13,7 +13,7 @@
 # Ядру  0 установлен режим performance
 # Ядру  1 установлен режим performance
 # root@notebook:/home/boris/study/python#
-
+import os
 # Выбор режима.
 def select_governors():
     """Функция выбора режима"""
@@ -65,4 +65,8 @@ def run():
         print("Ошибка в scaling_write(governor): Нет доступа к /sys")
         
 # Запуск.
-run()
+if __name == '__main__':
+    if os.getuid != 0:
+        print("Необходимо выполнять с правами суперпользователя")
+    else
+        run()
