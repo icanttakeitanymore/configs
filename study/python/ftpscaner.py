@@ -55,9 +55,9 @@ def converter():
     servers_found_instr = str(servers_found_instr).replace(']','')
     servers_found_instr = str(servers_found_instr).replace("'","")
     servers_found_instr = str(servers_found_instr).replace(" ","")
-    servers_found_online = list(servers_found_instr.split(','))
+    servers_found_online = servers_found_instr.split(',')
 
-    if servers_found_online == [""]:
+    if servers_found_online == []:
         print("Нет онлайн хостов")
         sys.exit()
 
@@ -92,7 +92,7 @@ def try_to_connect():
     global servers_with_anon
     for i in servers_with_ftp:
         try:                    # Попытка обработки исключения в цикле.
-            print("Тест:",i)
+            print("Тест анонимного соединения:",i)
             ftp = ftplib.FTP(i)
             test = ftp.login()
             if test.split(" ")[0] == str(230):
@@ -103,7 +103,7 @@ def try_to_connect():
                 print("Листинг файлов записан в : ",filename)
             else:
                 continue
-        except EOFError:        
+        except EOFError:
             print("EOFError")
             continue
         except ftplib.error_perm as e:
@@ -115,7 +115,8 @@ if __name__ == '__main__':
 	try:
 		ip = str(sys.argv[1]) + '/24'   # Сканируемая сеть.
 		if os.getuid() != 0:
-			print('нужно запустить от рута')
+			print('Необходимы права суперпользователя')
+			os.exit()
 		else:
 			print("[ Сканируемая сеть: ", ip,"]")
 			network_scan()
@@ -123,12 +124,12 @@ if __name__ == '__main__':
 			port_scaner()
 
 			for i in servers_with_ftp:
-				print(i, " Открыт")
+				print("\n", i, " Открыт")
 
 			try_to_connect()
 
 			if servers_with_ftp == []:
-				print("В этом диапазоне нет открытых фтп")
+				print("\nВ этом диапазоне нет хостов с открытым 21 портом")
 			else:
 				output = open('output.txt', 'w')
 				output.write(str(servers_with_anon))
