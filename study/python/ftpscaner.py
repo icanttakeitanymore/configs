@@ -3,11 +3,12 @@
 import subprocess
 import ftplib
 import sys
+import os
 
 nmap = '/usr/bin/nmap'    # Бинарник nmap.
 nmap_arg1= '-sP'          # Проверка пингом.
 nmap_arg2= '-p 21'        # Порт 21.
-ip = str(sys.argv[1]) + '/24'   # Сканируемая сеть.
+
 
 servers_found_nmap = []   # Лист полученый с stdout nmap.
 servers_found_instr = []  # Лист в котором происходит парсинг.
@@ -15,7 +16,7 @@ servers_found_online = [] # Лист хостов находящихся в се
 servers_with_ftp = []     # Лист хостов с открытым портом.
 servers_with_anon = []    # Логин анонимусом возвращает 230.
 
-print("[ Сканируемая сеть: ", ip,"]")
+
 
 
 def network_scan():
@@ -27,17 +28,19 @@ def network_scan():
     print("[ Поиск онлайн хостов. ]")
     job = subprocess.Popen([nmap,nmap_arg1,ip],stdout=subprocess.PIPE)
     out = job.communicate()
-    
+
+
     for line in list(str(out).split("\\")):
         servers_found_nmap.append(line.split(" ")[-1::])
-        
-    
+
+
+
     # Выбор только тех строк в которых есть совпадения по ip[:10:], то есть 123.123.123.
     for i in servers_found_nmap:
         if str(i).find(ip[:10:]) != -1:
             servers_found_instr.append(i)
-            
-            
+
+
 def converter(): 
     """Функция обработки списка servers_found_instr.
     Убираем лишние скобки и кавычки, получаем чистый список
@@ -57,10 +60,11 @@ def converter():
     if servers_found_online == [""]:
         print("Нет онлайн хостов")
         sys.exit()
-    
+
     print("Сервера онлайн: ", servers_found_online)
-                 
-        
+
+
+
 def port_scaner():
     """Функция сканирования порта в аргументе nmap_arg2.
     Помещаем хосты с открытым портом в servers_with_ftp.
@@ -79,7 +83,6 @@ def port_scaner():
         if str(out).find('STATE') != -1:    # Ищем STATE в выдаче nmap
             if str(out).find('open') != -1: # Ищем open в выдаче nmap
                 servers_with_ftp.append(i)        # Если всё верно помещаем в список.
-       
 
 
 def try_to_connect():
@@ -108,24 +111,34 @@ def try_to_connect():
             continue
 
 # Runc
+if __name__ == '__main__':
+	try:
+		ip = str(sys.argv[1]) + '/24'   # Сканируемая сеть.
+		if os.getuid() != 0:
+			print('нужно запустить от рута')
+		else:
+			print("[ Сканируемая сеть: ", ip,"]")
+			network_scan()
+			converter()
+			port_scaner()
 
-network_scan()
-converter()
+			for i in servers_with_ftp:
+				print(i, " Открыт")
 
+			try_to_connect()
 
-port_scaner()
+			if servers_with_ftp == []:
+				print("В этом диапазоне нет открытых фтп")
+			else:
+				output = open('output.txt', 'w')
+				output.write(str(servers_with_anon))
+				output.close()
 
-for i in servers_with_ftp:
-    print(i, " Открыт")
-    
-try_to_connect()
-
-if servers_with_ftp == []:
-    print("В этом диапазоне нет открытых фтп")
-else:
-    output = open('output.txt', 'w')
-    output.write(str(servers_with_anon))
-    output.close()
-
-for i in servers_with_anon:
-    print(i, " Анонимное соединение")
+			for i in servers_with_anon:
+				print(i, " Анонимное соединение")
+	except IndexError:
+		print("""
+			Необходимо указать сканируемую сеть
+			например 192.168.1.0 или 10.100.1.0.
+			Сети сканируются по маске /24.
+			""")
