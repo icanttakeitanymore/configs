@@ -1,0 +1,5 @@
+sip 192.168.77.2
+users /etc/asterisk/users.conf
+# cli + v
+asterisk -rv
+# sip show peers
